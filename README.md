@@ -101,7 +101,7 @@ C:Bot\
 ├── .env
 ├── bot_settings.json (空でもOK、またはsetchannel後に生成)
 ├── assets\
-│   └── **watermark_templates**\
+│   └── watermark_templates\
 │       ├── POCO F3.png
 │       └── ... (他のテンプレート)
 ├── audio\
