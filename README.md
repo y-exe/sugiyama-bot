@@ -2,7 +2,8 @@
 
 # 杉山啓太Bot
 
-多機能Discord Bot (Gemini AI連携, RVC音声変換, 画像処理, ゲーム機能搭載)
+多機能Bot（笑）
+杉山啓太がGM雑談ライフをサポートします
 
 <img src="https://count.getloli.com/@yexe.net" /><br>
 yexe.net 総合
@@ -14,8 +15,8 @@ yexe.net 総合
 
 </div>
 
-杉山啓太Botは、Discordサーバーでのコミュニケーションを豊かにするための多目的Botです。
-GoogleのGemini AIを利用したテキスト生成や画像編集、RVC (Retrieval-based Voice Conversion) を用いたリアルタイム風の音声変換、様々な画像処理機能、そしてオセロゲームなど、多彩なエンターテイメント機能を提供します。
+杉山啓太Botは `#Botと遊ぶ場所` で使えるコンテンツを提供します
+RVCを用いたリアルタイム風の音声変換、様々な画像処理機能、そしてオセロゲームなどの機能を実装しています。
 
 ## 主な機能
 
