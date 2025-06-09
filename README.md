@@ -1,6 +1,6 @@
 <div align="center">
 
-# 杉山啓太Bot (Keita Sugiyama Bot)
+# 杉山啓太Bot
 
 多機能Discord Bot (Gemini AI連携, RVC音声変換, 画像処理, ゲーム機能搭載)
 
@@ -91,14 +91,34 @@ GoogleのGemini AIを利用したテキスト生成や画像編集、RVC (Retrie
     *   **ウォーターマーク用テンプレート画像:**
         *   Botリポジトリ内の `assets/watermark_templates/` フォルダにあるテンプレート画像 (例: `POCO F3.png` など) が `C:\Bot\assets\watermark_templates\` に正しく配置されていることを確認します。(`ymkw.py` の `TEMPLATES_DATA` リスト参照)
 
-4.  **`.env` ファイルの作成と設定:**
-    *   `C:\Bot` フォルダ内に `.env` という名前のファイルを作成します。
-    *   ファイルに以下の内容を記述し、**実際のあなたのAPIキーに置き換えてください。**
-        ```env
-        DISCORD_BOT_TOKEN="あなたのDiscord Botトークン"
-        GEMINI_API_KEY="あなたのGoogle AI Studio (Gemini) のAPIキー"
-        ```
-        **これらのキーがないとBotは正常に動作しません。**
+4.  **ファイル作成**
+
+**C:Bot**\
+├── **ymkw.py**
+├── **.env**
+├── bot_settings.json (空でもOK、またはsetchannel後に生成)
+├── **assets**\
+│   └── **watermark_templates**\
+│       ├── POCO F3.png
+│       └── ... (他のテンプレート)
+├── **audio**\
+│   ├── **input**\
+│   └── **output**\
+└── **RVC_Project**\
+    ├── tools\
+    │   └── infer_cli.py
+    ├── assets\
+    │   ├── hubert\
+    │   │   └── hubert_base.pt
+    │   └── weights\
+    │       └── RVC.pth  (例)
+    │       └── RVC.index (例、あれば)
+    ├── requirements.txt
+    └── ... (RVCの他のファイル)
+
+こんな感じに最終的になります。
+作るのは太字になっているファイルだけでいいです
+RVC_Projectの中身は後で勝手に追加されます
 
 ### III. Pythonライブラリのインストール (仮想環境)
 
