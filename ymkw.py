@@ -4,7 +4,6 @@ import discord
 from discord.ext import commands
 import google.generativeai as genai
 from google.generativeai import types as genai_types
-# from google.api_core import exceptions as google_api_exceptions # Currently unused, can be removed if not needed
 import datetime
 import asyncio
 import aiohttp
@@ -19,7 +18,7 @@ import subprocess
 from dotenv import load_dotenv
 
 # ========================== CONFIGURATION & INITIALIZATION ==========================
-load_dotenv(os.path.join(os.path.dirname(__file__), ".env")) # Explicitly load .env from bot's directory
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env")) 
 
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN", "YOUR_DISCORD_BOT_TOKEN_PLACEHOLDER")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_PLACEHOLDER")
@@ -53,12 +52,11 @@ active_games = {}
 othello_recruitments = {}
 
 GEMINI_TEXT_MODEL_NAME = 'gemini-1.5-flash-latest'
-GEMINI_IMAGE_GENERATION_MODEL_ID = "gemini-2.0-flash-preview-image-generation" # This might require specific access or be a preview model ID
-
+GEMINI_IMAGE_GENERATION_MODEL_ID = "gemini-2.0-flash-preview-image-generation" 
 RVC_PROJECT_ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "RVC_Project"))
 RVC_MODEL_DIR_IN_PROJECT = os.path.join("assets", "weights")
-RVC_MODEL_NAME_WITH_EXT = "RVC.pth" # Example, replace with your actual model file name
-RVC_INFER_SCRIPT_SUBPATH = os.path.join("tools", "infer_cli.py") # Assuming infer_cli.py is in RVC_Project/tools/
+RVC_MODEL_NAME_WITH_EXT = "RVC.pth" # RVCのモデル名にしてください
+RVC_INFER_SCRIPT_SUBPATH = os.path.join("tools", "infer_cli.py") 
 RVC_FIXED_TRANSPOSE = 0
 RVC_INPUT_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "audio", "input")
 RVC_OUTPUT_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "audio", "output")
