@@ -4,6 +4,7 @@
 
 多機能Bot（笑）
 杉山啓太がGM雑談ライフをサポートします
+AIに修正もらってたら自分でもわけわかめなコードになってました
 
 <img src="https://count.getloli.com/@yexe.net" /><br>
 yexe.net 総合
