@@ -202,11 +202,11 @@ RVC_Projectの中身は後で勝手に追加されますので作らなくてい
 
 ## クレジット・参考プロジェクト
 
-仕様APIなど///
+仕様APIなど
 
 *   **RVC (Retrieval-based Voice Conversion):** [RVC-Project/Retrieval-based-Voice-Conversion-WebUI](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI)
 *   **Google Gemini API:** [ai.google.dev](https://ai.google.dev/)
-*   **5000兆円欲しい！ジェネレーターAPI:** [gsapi.cbrx.io](https://gsapi.cbrx.io/image) (現在はアクセスできない可能性があります。代替APIやローカル実装を検討ください)
+*   **5000兆円欲しい！ジェネレーターAPI:** [github.com/CyberRex0](https://github.com/CyberRex0/5000choyen-api) 
 *   **Discord.py:** [Rapptz/discord.py](https://github.com/Rapptz/discord.py)
 *   **Pillow (PIL Fork):** [python-pillow/Pillow](https://github.com/python-pillow/Pillow)
 *   **aiohttp:** [aio-libs/aiohttp](https://github.com/aio-libs/aiohttp)
