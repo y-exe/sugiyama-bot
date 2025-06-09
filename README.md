@@ -5,6 +5,7 @@
 多機能Discord Bot (Gemini AI連携, RVC音声変換, 画像処理, ゲーム機能搭載)
 
 <img src="https://count.getloli.com/@yexe.net" /><br>
+yexe.net 総合
 
 [![Discord.py](https://img.shields.io/badge/discord.py-v2.x-blue?style=for-the-badge&logo=discord&logoColor=white)](https://discordpy.readthedocs.io/en/latest/)
 [![Python](https://img.shields.io/badge/Python-3.10+-yellow?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
@@ -93,6 +94,7 @@ GoogleのGemini AIを利用したテキスト生成や画像編集、RVC (Retrie
 
 4.  **ファイル作成**
 
+```bash
 **C:Bot**\
 ├── **ymkw.py**
 ├── **.env**
@@ -115,6 +117,7 @@ GoogleのGemini AIを利用したテキスト生成や画像編集、RVC (Retrie
     │       └── RVC.index (例、あれば)
     ├── requirements.txt
     └── ... (RVCの他のファイル)
+```
 
 こんな感じに最終的になります。
 作るのは太字になっているファイルだけでいいです
