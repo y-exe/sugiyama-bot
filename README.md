@@ -1,6 +1,6 @@
 <div align="center">
 
-# 杉山啓太Bot (ymkw.py)
+# 杉山啓太Bot
 
 多機能Bot（笑）<br>
 杉山啓太がGM雑談ライフをサポートします。<br>
