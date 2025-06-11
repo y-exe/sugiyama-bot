@@ -1,210 +1,158 @@
 <div align="center">
 
-# 杉山啓太Bot
+# 杉山啓太Bot (ymkw.py)
 
-多機能Bot（笑）
-杉山啓太がGM雑談ライフをサポートします
-AIに修正もらってたら自分でもわけわかめなコードになってました
+多機能Bot（笑）<br>
+杉山啓太がGM雑談ライフをサポートします。<br>
+AIに修正もらってたら自分でもわけわかめなコードになってました。
 
-<img src="https://count.getloli.com/@yexe.net" /><br>
-yexe.net 総合
+<img src="https://count.getloli.com/@yexe.net" alt="yexe.net 総合カウンター"/><br>
+<sub>yexe.net 総合</sub>
 
 [![Discord.py](https://img.shields.io/badge/discord.py-v2.x-blue?style=for-the-badge&logo=discord&logoColor=white)](https://discordpy.readthedocs.io/en/latest/)
 [![Python](https://img.shields.io/badge/Python-3.10.11-yellow?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/release/python-31011/)
+[![Support Server](https://img.shields.io/discord/YOUR_SERVER_ID?label=Support%20Server&logo=discord&style=for-the-badge&color=7289DA)](https://discord.gg/FXamRgKSph)
 [![License](https://img.shields.io/badge/LICENSE-MIT-green.svg?style=for-the-badge)](LICENSE) 
 
 </div>
 
-杉山啓太Botは `#Botと遊ぶ場所` で使えるコンテンツを提供します
-RVCを用いたリアルタイム風の音声変換、様々な画像処理機能、そしてオセロゲームなどの機能を実装しています。
+## 概要
+
+杉山啓太Bot (`ymkw.py`) は、Discordサーバーでの活動を多角的にサポートするために開発されたBotです。
+GoogleのGemini AIによるテキスト生成や会話要約、RVC (Retrieval-based Voice Conversion) 技術を用いた音声変換、多彩な画像処理ユーティリティ、そしてインタラクティブなオセロゲームなど、幅広い機能を提供します。
+
+コマンドの実行は、許可されたチャンネルでコマンド名（例: `totusi`）と引数を入力するだけで直感的に行えます (プレフィックス不要)。
 
 ## 主な機能
 
 *   **AI機能 (Google Gemini API):**
-    *   **チャット要約:** 指定時間内のチャット履歴を要約します (`/imakita` スラッシュコマンド)。
+    *   チャット要約: スラッシュコマンド `/imakita` で直近30分の会話を3行で要約。
+    *   (内部的にテキスト生成機能を利用)
 *   **RVC 音声変換:**
-    *   ユーザーが添付した音声ファイルを、事前に学習させたRVCモデルを使用して声質変換します。`/voice`
-    *   CPUベースでの処理に対応しています。
+    *   `voice [音声ファイル添付]`: 添付音声の声を、設定されたRVCモデル (`ymkw.pth`) で変換。
 *   **画像処理:**
-    *   **ウォーターマーク合成:** ユーザーがアップロードした画像に、複数のテンプレートから最適なものを選択してウォーターマークを合成します。`/watermark`
-    *   **「5000兆円欲しい！」画像生成:** 指定した文字列で人気のジェネレーター画像を生成します。`/5000`
-    *   **ゲーミング風GIF変換:** 画像を虹色に変化するゲーミング風のGIFアニメーションに変換します。`/gaming`
-*   **ゲーム機能:**
-    *   **オセロ:** サーバー内で他のユーザーとオセロゲームをプレイできます。対戦相手の募集も可能です`/othello`。
-*   **その他:**
-    *   **コマンド実行チャンネル制限:** 管理者はBotのコマンドを利用できるチャンネルを指定できます。`/setchannel`
-    *   **ヘルプコマンド:** 利用可能なコマンドの一覧と説明を表示します。`/help`
+    *   `watermark [画像ファイル添付]`: 画像に最適なウォーターマークを自動合成。
+    *   `5000 [上文字列] [下文字列] (hoshii) (rainbow)`: 「5000兆円欲しい！」画像を生成。
+    *   `gaming [画像ファイル添付]`: 画像をゲーミング風GIFに変換。
+*   **ゲーム機能 (オセロ):**
+    *   `othello (@相手ユーザー)`: オセロ対戦相手を募集、または指定ユーザーと即時対戦。
+    *   ゲームID付与、AFK検知 (3分)、途中離脱 (❌リアクション)、ポイントシステム搭載。
+    *   `othello_points`: 自身のオセロポイントを表示。
+*   **便利コマンド:**
+    *   `ping`: Botの応答速度を表示。
+    *   `tenki [都市名]` (または `weather [都市名]`): 指定都市の3日間天気予報を表示。
+    *   `info @メンション`: ユーザー詳細情報を表示。
+    *   `rate [金額] [通貨コード]`: 外貨金額を日本円に換算。
+    *   `shorturl [URL]`: URLをx.gdで短縮 (要APIキー)。
+    *   `totusi [文字列]`: 「唐突の死」AAを生成。
+*   **管理機能:**
+    *   `setchannel`: (管理者のみ) Botのコマンド利用を現在のチャンネルで許可/禁止。
+
+## 動作に必要なファイル配置
+
+Botを正しく動作させるためには、以下のフォルダ構成とファイル配置が必要です。
+ルートフォルダは `C:\Bot` を想定しています。
+
+
+C:\Bot
+├── ymkw.py # Bot本体のPythonスクリプト (このリポジトリから)
+├── .env # APIキーなどを格納 (ユーザーが作成)
+├── bot_settings.json # チャンネル制限設定 (空で作成 or 初回setchannelで自動生成)
+├── othello_points.json # オセロのポイント記録 (空で作成 or 初回ポイント変動で自動生成)
+├── assets\ # Bot用アセット (このリポジトリから、またはユーザーが用意)
+│ └── watermark_templates
+│ ├── POCO F3.png # ウォーターマーク用テンプレート画像 (例)
+│ └── ... # 他のテンプレート画像
+├── audio\ # RVCの一時音声ファイル用 (Botが自動生成)
+│ ├── input
+│ └── output
+└── RVC_Project\ # RVC本体 (ユーザーが別途 git clone で取得)
+├── tools
+│ └── infer_cli.py # RVC推論スクリプト
+├── assets
+│ ├── hubert
+│ │ └── hubert_base.pt # HuBERTモデル (ユーザーが別途ダウンロード・配置)
+│ └── weights
+│ └── ymkw.pth # RVC学習済みモデル (ユーザーが用意・配置)
+│ └── ymkw.index # RVC学習済みモデルのインデックス (例, あれば)
+├── requirements.txt # RVCのPython依存ライブラリリスト
+├── venv\ # Python共有仮想環境 (ユーザーが作成・設定)
+└── ... # RVCのその他ファイル群
+
+(各ファイル/フォルダの詳細は前回の回答を参照してください)
 
 ## 導入手順 (Windows CPU環境向け)
 
-このBotを動作させるためには、いくつかのソフトウェアのインストールと設定が必要です。
-
 ### I. 事前準備: 必要なソフトウェアのインストール
 
-1.  **Python 3.10.11:**
-    *   **ダウンロード:** [python.org](https://www.python.org/downloads/release/python-31011) より Windows installer (64-bit推奨) を入手。
-    *   **インストール時:** インストーラーの最初の画面で **「Add Python 3.10 to PATH」に必ずチェックを入れてください。**
-
-2.  **Git:**
-    *   **ダウンロード:** [git-scm.com](https://git-scm.com/downloads) より Windows版を入手。
-    *   **インストール時:** 基本的にデフォルト設定で進めてください。
-
-3.  **FFmpeg:**
-    *   **ダウンロード:** [ffmpeg.org/download.html](https://ffmpeg.org/download.html) 経由で、Windowsビルド (例: [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) の `ffmpeg-release-full.7z`) を入手。
-    *   **展開・配置:** 解凍後、フォルダ (例: `ffmpeg-7.x.x-release-full`) を `C:\ffmpeg` などに配置。
-    *   **PATH設定:** `C:\ffmpeg\bin` (ffmpeg.exeがあるフォルダ) をシステムの環境変数 `Path` に追加し、**PCを再起動** (またはターミナルを再起動)。
-    *   **確認:** コマンドプロンプトで `ffmpeg -version` と入力し、バージョン情報が表示されることを確認。
-
-4.  **Microsoft C++ Build Tools:**
-    *   **ダウンロード:** [visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/) より「Build Tools for Visual Studio」を入手。
-    *   **インストール時:** 「ワークロード」タブで **「C++によるデスクトップ開発」** を選択しインストール。
-    *   **インストール後、PCを再起動。**
+1.  **Python 3.10.11 (または3.10.x):** [python.org](https://www.python.org/downloads/release/python-31011/) より入手し、インストール時に **「Add Python to PATH」に必ずチェック**。
+2.  **Git:** [git-scm.com](https://git-scm.com/downloads) より入手し、インストール。
+3.  **FFmpeg:** [ffmpeg.org](https://ffmpeg.org/download.html) 経由でWindowsビルドを入手。解凍後、`bin` フォルダにPATHを通し、**PC/ターミナルを再起動**。確認: `ffmpeg -version`。
+4.  **Microsoft C++ Build Tools:** [visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/) より入手。「ワークロード」で **「C++によるデスクトップ開発」** を選択。**インストール後、PCを再起動。**
 
 ### II. プロジェクトのセットアップ
 
-1.  **プロジェクトリポジトリのクローン:**
-    *   このGitHubリポジトリをクローンするか、ZIPファイルをダウンロードして展開します。
-    *   展開先を `C:\Bot` (Cドライブ直下の `Bot` フォルダ) とします。
-
-2.  **RVCプロジェクトのダウンロード:**
-    *   コマンドプロンプトまたはPowerShellを開き、`C:\Bot` フォルダに移動します。
-        ```bash
-        cd C:\Bot
-        ```
-    *   RVCプロジェクトを `RVC_Project` という名前でクローンします。
-        ```bash
-        git clone https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI.git RVC_Project
-        ```
-
-3.  **必要なモデルファイルとアセットの配置:**
-
-    *   **HuBERTモデル (`hubert_base.pt`):**
-        *   **ダウンロード:** [例: Hugging Face](https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/hubert_base.pt) (RVCプロジェクトの公式情報を確認推奨)
-        *   **配置:** `C:\Bot\RVC_Project\assets\` フォルダ内に `hubert` フォルダを作成し、その中に `hubert_base.pt` を配置します。
-            (最終パス: `C:\Bot\RVC_Project\assets\hubert\hubert_base.pt`)
-
-    *   **RVC用学習済みモデル (例: `RVC.pth`):**
-        *   使用したい `.pth` モデルファイル (および対応する `.index` ファイルがあれば) を用意します。
-        *   **配置:** `C:\Bot\RVC_Project\assets\weights\` フォルダ (なければ作成) に配置します。
-        *   `C:\Bot\ymkw.py` 内の `RVC_MODEL_NAME_WITH_EXT` の値を、ここで配置したモデルのファイル名 (例: `"MyModel.pth"`) に合わせてください。
-
-    *   **ウォーターマーク用テンプレート画像:**
-        *   Botリポジトリ内の `assets/watermark_templates/` フォルダにあるテンプレート画像 (例: `POCO F3.png` など) が `C:\Bot\assets\watermark_templates\` に正しく配置されていることを確認します。(`ymkw.py` の `TEMPLATES_DATA` リスト参照)
-
-4.  **ファイル作成**
-
-```bash
-C:Bot\
-├── ymkw.py
-├── .env
-├── bot_settings.json (空でもOK、またはsetchannel後に生成)
-├── assets\
-│   └── watermark_templates\
-│       ├── POCO F3.png
-│       └── ... (他のテンプレート)
-├── audio\
-│   ├── input\
-│   └── output\
-└── RVC_Project\
-    ├── tools\
-    │   └── infer_cli.py
-    ├── assets\
-    │   ├── hubert\
-    │   │   └── hubert_base.pt
-    │   └── weights\
-    │       └── RVC.pth  (例)
-    │       └── RVC.index (例、あれば)
-    ├── requirements.txt
-    └── ... (RVCの他のファイル)
-```
-
-こんな感じに最終的になります。
-RVC_Projectの中身は後で勝手に追加されますので作らなくていいです
-
-### III. Pythonライブラリのインストール (仮想環境)
-
-1.  **仮想環境の作成:**
-    *   コマンドプロンプト/PowerShellで `C:\Bot\RVC_Project` フォルダに移動します。
-        ```bash
-        cd C:\Bot\RVC_Project
-        ```
-    *   仮想環境 (`venv`という名前で) を作成します。
-        ```bash
-        python -m venv venv
-        ```
-
-2.  **仮想環境の有効化:**
-    *   コマンドプロンプト: `venv\Scripts\activate.bat`
-    *   PowerShell: `.\venv\Scripts\Activate.ps1`
-        (PowerShellでエラーが出る場合は `Set-ExecutionPolicy RemoteSigned -Scope Process` を先に実行)
-    *   プロンプトの先頭に `(venv)` と表示されることを確認します。
-
-3.  **必要なPythonライブラリのインストール:**
-    仮想環境が有効な状態で、以下のコマンドを実行します。
-
-    *   **`pip` のアップグレードと一時的なダウングレード:**
-        ```bash
-        python -m pip install --upgrade pip
-        python -m pip install "pip<24.1" 
-        ```
-        (`pip<24.1` は `omegaconf` のメタデータエラー対策です。)
-
-    *   **RVCの依存ライブラリ:**
-        ```bash
-        pip install -r requirements.txt
-        ```
-        (この際、特に `fairseq` のビルドに成功するか確認してください。)
-
-    *   **Bot本体の追加ライブラリ:**
-        ```bash
-        pip install discord.py python-dotenv google-generativeai pillow aiohttp numpy
-        ```
-
-    *   **(PyTorch `weights_only` エラー対策 - 推奨):**
-        `hubert_base.pt` 読み込み時のエラーを防ぐため、`fairseq` のファイルを修正します。
-        1.  テキストエディタで `C:\Bot\RVC_Project\venv\lib\site-packages\fairseq\checkpoint_utils.py` を開きます。
-        2.  `state = torch.load(f, map_location=torch.device("cpu"))` という行を探します。
-        3.  この行を `state = torch.load(f, map_location=torch.device("cpu"), weights_only=False)` に変更します。
-        4.  ファイルを保存します。
-
-### IV. Botの起動
-
-1.  コマンドプロンプト/PowerShellで `C:\Bot\RVC_Project` に移動し、仮想環境を有効化します (上記III-2参照)。
-2.  `C:\Bot` フォルダに移動し、Botを実行します。
-    ```bash
-    cd C:\Bot
-    python ymkw.py
+1.  **このリポジトリのファイル配置:** `C:\Bot` フォルダに、このリポジトリの `ymkw.py` や `assets` フォルダなどを配置します。
+2.  **RVCプロジェクトのダウンロード:** コマンドプロンプト/PowerShellで `C:\Bot` に移動し、`git clone https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI.git RVC_Project` を実行。
+3.  **必要なモデルファイル等の配置:**
+    *   **HuBERTモデル (`hubert_base.pt`):** `C:\Bot\RVC_Project\assets\hubert\hubert_base.pt` に配置。 (ダウンロードリンク例: [Hugging Face](https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/hubert_base.pt))
+    *   **RVC学習済みモデル (`ymkw.pth`, `ymkw.index`):** `C:\Bot\RVC_Project\assets\weights\` に配置。
+    *   **ウォーターマーク用テンプレート画像:** `C:\Bot\assets\watermark_templates\` に配置。
+4.  **`.env` ファイルの作成:** `C:\Bot` に `.env` ファイルを作成し、以下を記述 (実際のキーに置換):
+    ```env
+    DISCORD_BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN"
+    GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+    SHORTURL_API_KEY="YOUR_XGD_API_KEY" 
     ```
-3.  コンソールにBotの起動ログが表示され、エラーがないことを確認します。
-4.  DiscordでBotがオンラインになり、コマンドが利用できるかテストします。
+5.  **設定JSONファイルの作成 (空ファイル):** `C:\Bot` に `bot_settings.json` と `othello_points.json` を `{}` という内容で作成。
 
-## 主なコマンド
+### III. Pythonライブラリのインストール (共有仮想環境)
 
-*   `!help`: このヘルプメッセージを表示します。
-*   `!voice`: (音声ファイルを添付) 添付された音声の声をRVCモデルで変換します。
-*   `!watermark`: (画像ファイルを添付) 画像にウォーターマークを合成します。
-*   `!image [プロンプト]`: (画像ファイルを添付) 添付画像とプロンプトでAIが画像を編集・生成します。
-*   `!5000 [上の文字] [下の文字] (hoshii) (rainbow)`: 「5000兆円欲しい！」画像を生成します。
-*   `!gaming`: (画像ファイルを添付) 画像をゲーミング風GIFに変換します。
-*   `!othello (@相手ユーザー)`: オセロの対戦相手を募集、または指定ユーザーと即時対戦を開始します。
-*   `/imakita`: (スラッシュコマンド) 直近30分のチャンネルの会話を3行で要約します。
-*   `!setchannel`: (管理者のみ) Botの通常コマンドの利用を現在のチャンネルで許可/禁止します。
+1.  **仮想環境の作成と有効化:** `C:\Bot\RVC_Project` に移動し、`python -m venv venv` を実行。その後、仮想環境を有効化 (例: `.\venv\Scripts\Activate.ps1`)。プロンプト先頭に `(venv)` が表示されることを確認。
+2.  **ライブラリインストール:** 仮想環境が有効な状態で以下を実行:
+    ```bash
+    python -m pip install --upgrade pip
+    python -m pip install "pip<24.1" 
+    python -m pip install -r requirements.txt  # RVC_Projectフォルダにあるもの
+    python -m pip install discord.py python-dotenv google-generativeai pillow aiohttp numpy
+    ```
+    *   **PyTorch `weights_only` エラー対策:** `C:\Bot\RVC_Project\venv\lib\site-packages\fairseq\checkpoint_utils.py` の `torch.load(...)` に `weights_only=False` を追加。
+
+### IV. Botのコード (`ymkw.py`) 内の設定確認
+
+*   `ymkw.py` を開き、`RVC_MODEL_NAME_WITH_EXT` (例: `"ymkw.pth"`) が正しいか確認。
+*   `infer_cli.py` のコマンドラインオプションが `ymkw.py` 内の呼び出しと一致しているか、`python tools\infer_cli.py --help` で確認し、必要なら `ymkw.py` を修正。
+
+### V. Discord Developer Portalでの設定
+
+*   Botアプリケーションページで、「Privileged Gateway Intents」の **「Server Members Intent」を有効化**。
+
+### VI. Botの実行
+
+1.  `C:\Bot\RVC_Project` で仮想環境を有効化。
+2.  `C:\Bot` に移動し、`python ymkw.py` を実行。
+3.  コンソールログを確認し、Discordで動作テスト。
 
 ## トラブルシューティング
 
-*   **`fairseq` のビルドエラー:** Microsoft C++ Build Toolsが正しくインストールされ、PCが再起動されているか確認してください。
-*   **`ffmpeg` が見つからないエラー:** FFmpegがインストールされ、PATHが正しく設定されているか、PC/ターミナルが再起動されているか確認してください。
-*   **HuBERTモデルが見つからないエラー:** `C:\Bot\RVC_Project\assets\hubert\hubert_base.pt` にファイルが正しく配置されているか確認してください。
-*   **`_pickle.UnpicklingError: Weights only load failed...`:** 上記「III. Pythonライブラリのインストール」のPyTorchエラー対策が適用されているか確認してください。
-*   **APIキーエラー:** `.env` ファイルに正しいDiscord BotトークンとGemini APIキーが設定されているか確認してください。
+*   **`fairseq` ビルドエラー:** Microsoft C++ Build ToolsのインストールとPC再起動を確認。
+*   **`ffmpeg` 見つからないエラー:** FFmpegのインストールとPATH設定、PC/ターミナル再起動を確認。
+*   **HuBERTモデル (`hubert_base.pt`) 見つからないエラー:** `C:\Bot\RVC_Project\assets\hubert\` への配置を確認。
+*   **`_pickle.UnpicklingError: Weights only load failed...`:** III-2のPyTorchエラー対策を確認。
+*   **APIキーエラー:** `C:\Bot\.env` ファイルのトークンとキー設定を確認。
+*   **`ModuleNotFoundError`:** 正しい仮想環境が有効化されているか、必要なライブラリがその仮想環境にインストールされているか確認。
 
 ## クレジット・参考プロジェクト
 
-仕様APIなど
+このBotは以下の素晴らしいプロジェクトやAPIを利用しています。
 
 *   **RVC (Retrieval-based Voice Conversion):** [RVC-Project/Retrieval-based-Voice-Conversion-WebUI](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI)
 *   **Google Gemini API:** [ai.google.dev](https://ai.google.dev/)
-*   **5000兆円欲しい！ジェネレーターAPI:** [github.com/CyberRex0](https://github.com/CyberRex0/5000choyen-api) 
+*   **5000兆円欲しい！ジェネレーターAPI:** `https://gsapi.cbrx.io/image` (外部API)
+*   **つくもたんAPI (天気予報):** [weather.tsukumijima.net](https://weather.tsukumijima.net/)
+*   **KRNK Exchange Rate API:** [wiki.krnk.org/ja/services/api-service/exchange-rate-api](https://wiki.krnk.org/ja/services/api-service/exchange-rate-api)
+*   **x.gd URL Shortener API:** [x.gd/view/developer](https://x.gd/view/developer)
+*   **唐突の死ジェネレータースクリプト (参考):** [fumiyas/home-commands/echo-sd](https://github.com/fumiyas/home-commands/blob/master/echo-sd)
 *   **Discord.py:** [Rapptz/discord.py](https://github.com/Rapptz/discord.py)
 *   **Pillow (PIL Fork):** [python-pillow/Pillow](https://github.com/python-pillow/Pillow)
 *   **aiohttp:** [aio-libs/aiohttp](https://github.com/aio-libs/aiohttp)
