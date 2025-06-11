@@ -53,7 +53,7 @@ GoogleのGemini AIによるテキスト生成や会話要約、RVC (Retrieval-ba
 Botを正しく動作させるためには、以下のフォルダ構成とファイル配置が必要です。
 ルートフォルダは `C:\Bot` を想定しています。
 
-
+```bash
 C:\Bot\
 ├── ymkw.py                     # Bot本体のPythonスクリプト (このリポジトリから)
 ├── .env                        # APIキーなどを格納 (ユーザーが作成)
