@@ -107,7 +107,7 @@ C:\Bot
 
 ### III. Pythonライブラリのインストール (共有仮想環境)
 
-1.  **仮想環境の作成と有効化
+1.  **仮想環境の作成と有効化**
     ```bash
     cd C:\Bot\RVC_Project
     python -m venv venvAdd commentMore actions
@@ -115,15 +115,13 @@ C:\Bot
     .\venv\Scripts\Activate.ps1
     ```
 　  プロンプト先頭に `(venv)` が表示されることを確認。
-2.  **ライブラリインストール:** 仮想環境が有効な状態で以下を実行:
-    
+2.  **ライブラリインストール:** 仮想環境が有効な状態で以下を実行:    
    ```bash
-   python -m pip install --upgrade pip
-   python -m pip install "pip<24.1" 
-   python -m pip install -r requirements.txt  # RVC_Projectフォルダにあるもの
-   python -m pip install discord.py python-dotenv google-generativeai pillow aiohttp numpy
+    python -m pip install --upgrade pip
+    python -m pip install "pip<24.1" 
+    python -m pip install -r requirements.txt  # RVC_Projectフォルダにあるもの
+    python -m pip install discord.py python-dotenv google-generativeai pillow aiohttp numpy
    ```
-    *   **PyTorch `weights_only` エラー対策:** `C:\Bot\RVC_Project\venv\lib\site-packages\fairseq\checkpoint_utils.py` の `torch.load(...)` に `weights_only=False` を追加。
 
 ### IV. Botのコード (`ymkw.py`) 内の設定確認
 
