@@ -95,7 +95,7 @@ C:\Bot
 2.  **RVCプロジェクトのダウンロード:** コマンドプロンプト/PowerShellで `C:\Bot` に移動し、`git clone https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI.git RVC_Project` を実行。
 3.  **必要なモデルファイル等の配置:**
     *   **HuBERTモデル (`hubert_base.pt`):** `C:\Bot\RVC_Project\assets\hubert\hubert_base.pt` に配置。 (ダウンロードリンク例: [Hugging Face](https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/hubert_base.pt))
-    *   **RVC学習済みモデル (`ymkw.pth`, `ymkw.index`):** `C:\Bot\RVC_Project\assets\weights\` に配置。
+    *   **RVC学習済みモデル (`ymkw.pth`):** `C:\Bot\RVC_Project\assets\weights\` に配置。
     *   **ウォーターマーク用テンプレート画像:** `C:\Bot\assets\watermark_templates\` に配置。
 4.  **`.env` ファイルの作成:** `C:\Bot` に `.env` ファイルを作成し、以下を記述 (実際のキーに置換):
     ```env
@@ -128,8 +128,14 @@ C:\Bot
 
 ### VI. Botの実行
 
-1.  `C:\Bot\RVC_Project` で仮想環境を有効化。
-2.  `C:\Bot` に移動し、`python ymkw.py` を実行。
+1.  仮想環境を有効化。
+ ```bash
+    cd C:\Bot\RVC_Project
+    python -m venv venvAdd commentMore actions
+    Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+    .\venv\Scripts\Activate.ps1
+ ```
+2.  `C:\Bot` に移動し、`py ymkw.py` を実行。
 3.  コンソールログを確認し、Discordで動作テスト。
 
 ## トラブルシューティング
