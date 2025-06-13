@@ -129,12 +129,12 @@ C:\Bot
 ### VI. Botの実行
 
 1.  仮想環境を有効化。
- ```bash
+    ```bash
     cd C:\Bot\RVC_Project
     python -m venv venvAdd commentMore actions
     Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
     .\venv\Scripts\Activate.ps1
- ```
+    ```
 2.  `C:\Bot` に移動し、`py ymkw.py` を実行。
 3.  コンソールログを確認し、Discordで動作テスト。
 
