@@ -147,7 +147,7 @@ C:\Bot
 
 *   **RVC (Retrieval-based Voice Conversion):** [RVC-Project/Retrieval-based-Voice-Conversion-WebUI](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI)
 *   **Google Gemini API:** [ai.google.dev](https://ai.google.dev/)
-*   **5000兆円欲しい！ジェネレーターAPI:** `https://gsapi.cbrx.io/image` (外部API)
+*   **5000兆円欲しい！ジェネレーターAPI:** [gsapi.cbrx.io/image](https://gsapi.cbrx.io/image)
 *   **つくもたんAPI (天気予報):** [weather.tsukumijima.net](https://weather.tsukumijima.net/)
 *   **KRNK Exchange Rate API:** [wiki.krnk.org/ja/services/api-service/exchange-rate-api](https://wiki.krnk.org/ja/services/api-service/exchange-rate-api)
 *   **x.gd URL Shortener API:** [x.gd/view/developer](https://x.gd/view/developer)
