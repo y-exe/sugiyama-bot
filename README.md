@@ -115,7 +115,8 @@ C:\Bot
     .\venv\Scripts\Activate.ps1
    ```
    プロンプト先頭に `(venv)` が表示されることを確認。
-2.  **ライブラリインストール:** 仮想環境が有効な状態で以下を実行:    
+
+   2.  **ライブラリインストール:** 仮想環境が有効な状態で以下を実行:    
    ```bash
     python -m pip install --upgrade pip
     python -m pip install "pip<24.1" 
