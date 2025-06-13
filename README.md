@@ -107,7 +107,14 @@ C:\Bot
 
 ### III. Pythonライブラリのインストール (共有仮想環境)
 
-1.  **仮想環境の作成と有効化:** `C:\Bot\RVC_Project` に移動し、`python -m venv venv` を実行。その後、仮想環境を有効化 (例: `.\venv\Scripts\Activate.ps1`)。プロンプト先頭に `(venv)` が表示されることを確認。
+1.  **仮想環境の作成と有効化
+    ```bash
+    cd C:\Bot\RVC_Project
+    python -m venv venvAdd commentMore actions
+    Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+    .\venv\Scripts\Activate.ps1
+    ```
+　  プロンプト先頭に `(venv)` が表示されることを確認。
 2.  **ライブラリインストール:** 仮想環境が有効な状態で以下を実行:
     ```bash
     python -m pip install --upgrade pip
