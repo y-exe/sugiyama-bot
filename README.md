@@ -116,12 +116,13 @@ C:\Bot
     ```
 　  プロンプト先頭に `(venv)` が表示されることを確認。
 2.  **ライブラリインストール:** 仮想環境が有効な状態で以下を実行:
-    ```bash
-    python -m pip install --upgrade pip
-    python -m pip install "pip<24.1" 
-    python -m pip install -r requirements.txt  # RVC_Projectフォルダにあるもの
-    python -m pip install discord.py python-dotenv google-generativeai pillow aiohttp numpy
-    ```
+    
+   ```bash
+   python -m pip install --upgrade pip
+   python -m pip install "pip<24.1" 
+   python -m pip install -r requirements.txt  # RVC_Projectフォルダにあるもの
+   python -m pip install discord.py python-dotenv google-generativeai pillow aiohttp numpy
+   ```
     *   **PyTorch `weights_only` エラー対策:** `C:\Bot\RVC_Project\venv\lib\site-packages\fairseq\checkpoint_utils.py` の `torch.load(...)` に `weights_only=False` を追加。
 
 ### IV. Botのコード (`ymkw.py`) 内の設定確認
