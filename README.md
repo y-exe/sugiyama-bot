@@ -44,7 +44,6 @@ GoogleのGemini AIによるテキスト生成や会話要約、RVC (Retrieval-ba
 *   `rate [金額] [3文字通貨コード]`: 指定した外貨の金額を現在のレートで日本円に換算して表示します。
 *   `shorturl [URL]` (または `short [URL]`): 指定したURLをx.gdサービスを利用して短縮します。 (別途APIキーの設定が必要です)
 *   `totusi [文字列]`: 入力した文字列を使って「＿人人人＿ ＞ 文字列 ＜ ￣Y^Y^Y￣」のようなAAを生成します。
-*   `amazon [Amazon商品URL]`: Amazonの商品ページのURLを短縮URL (amzn.to) に変換します。
 
 ## 動作に必要なファイル配置
 
