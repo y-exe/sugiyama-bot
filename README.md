@@ -58,23 +58,22 @@ C:\Bot
 ├── othello_points.json # オセロのポイント記録 (空で作成 or 初回ポイント変動で自動生成)
 ├── assets\ # Bot用アセット (このリポジトリから、またはユーザーが用意)
 │ └── watermark_templates
-│ ├── POCO F3.png # ウォーターマーク用テンプレート画像 (例)
-│ └── ... # 他のテンプレート画像
+│ 　├── POCO F3.png # ウォーターマーク用テンプレート画像 (例)
+│ 　└── ... # 他のテンプレート画像
 ├── audio\ # RVCの一時音声ファイル用 (Botが自動生成)
 │ ├── input
 │ └── output
 └── RVC_Project\ # RVC本体 (ユーザーが別途 git clone で取得)
-├── tools
-│ └── infer_cli.py # RVC推論スクリプト
-├── assets
-│ ├── hubert
-│ │ └── hubert_base.pt # HuBERTモデル (ユーザーが別途ダウンロード・配置)
-│ └── weights
-│ └── ymkw.pth # RVC学習済みモデル (ユーザーが用意・配置)
-│ └── ymkw.index # RVC学習済みモデルのインデックス (例, あれば)
-├── requirements.txt # RVCのPython依存ライブラリリスト
-├── venv\ # Python共有仮想環境 (ユーザーが作成・設定)
-└── ... # RVCのその他ファイル群
+　├── tools
+　│ └── infer_cli.py # RVC推論スクリプト
+　├── assets
+　│ ├── hubert
+　│ │ └── hubert_base.pt # HuBERTモデル (ユーザーが別途ダウンロード・配置)
+　│ └── weights
+　│ └── ymkw.pth # RVC学習済みモデル (ユーザーが用意・配置)
+　├── requirements.txt # RVCのPython依存ライブラリリスト
+　├── venv\ # Python共有仮想環境 (ユーザーが作成・設定)
+　└── ... # RVCのその他ファイル群
 ```
 
 (各ファイル/フォルダの詳細は以前の回答を参照してください)
