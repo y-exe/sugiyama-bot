@@ -18,8 +18,8 @@ AIに修正もらってたら自分でもわけわかめなコードになって
 
 ## 概要
 
-杉山啓太Bot (`ymkw.py`) は、Discordサーバーでの活動を多角的にサポートするために開発されたBotです。
-GoogleのGemini AIによるテキスト生成や会話要約、RVC (Retrieval-based Voice Conversion) 技術を用いた音声変換、多彩な画像処理ユーティリティ、そしてインタラクティブなオセロゲームなど、幅広い機能を提供します。
+杉山啓太Bot (`ymkw.py`) は、Discordサーバーでの遊び系の追加機能をするために開発されたBotです。
+AIによる会話要約、RVC技術を用いた音声変換、ウォーターマークマニア生成、そしてオセロなど、幅広い機能を提供します。
 
 コマンドの実行は、許可されたチャンネルでコマンド名（例: `totusi`）と引数を入力するだけで直感的に行えます (プレフィックス不要)。
 
@@ -92,9 +92,9 @@ C:\Bot
 1.  **このリポジトリのファイル配置:** `C:\Bot` フォルダに、このリポジトリの `ymkw.py` や `assets` フォルダなどを配置します。
 2.  **RVCプロジェクトのダウンロード:** コマンドプロンプト/PowerShellで `C:\Bot` に移動し、`git clone https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI.git RVC_Project` を実行。
 3.  **必要なモデルファイル等の配置:**
-    *   **HuBERTモデル (`hubert_base.pt`):** `C:\Bot\RVC_Project\assets\hubert\hubert_base.pt` に配置。 (ダウンロードリンク: [Hugging Face](https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/hubert_base.pt))
-    *   **RVC学習済みモデル (`ymkw.pth`):** `C:\Bot\RVC_Project\assets\weights\` に配置。
-    *   **ウォーターマーク用テンプレート画像:** `C:\Bot\assets\watermark_templates\` に配置。
+    *   **HuBERTモデル (`hubert_base.pt`):** `C:\Bot\RVC_Project\assets\hubert\hubert_base.pt` に配置。 (ダウンロード: [Hugging Face](https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/hubert_base.pt))
+    *   **RVC学習済みモデル (`ymkw.pth`):** `C:\Bot\RVC_Project\assets\weights\` に配置。 ダウンロード：[mega.nz](https://mega.nz/file/Y6E2SQIY#SjKYBZjjps_MhVZ6J0HRsHtKUw-sMs5qhawVNzd2SqM)
+    *   **ウォーターマーク用テンプレート画像:** `C:\Bot\assets\watermark_templates\` に配置。ダウンロード：[mega.nz](https://mega.nz/folder/A2dQRD6Q#i5Aukald6tl6LA4CG9B72g)
 4.  **`.env` ファイルの作成:** `C:\Bot` に `.env` ファイルを作成し、以下を記述 (実際のキーに置換):
     ```env
     DISCORD_BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN"
