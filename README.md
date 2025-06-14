@@ -168,6 +168,7 @@ C:\Bot
 *   **つくもたんAPI (天気予報):** [weather.tsukumijima.net](https://weather.tsukumijima.net/)
 *   **KRNK Exchange Rate API:** [wiki.krnk.org/ja/services/api-service/exchange-rate-api](https://wiki.krnk.org/ja/services/api-service/exchange-rate-api)
 *   **x.gd URL Shortener API:** [x.gd/view/developer](https://x.gd/view/developer)
+*   **オセロ君** [syulis.jp/products/othello-kun](https://syulis.jp/products/othello-kun/)
 *   **唐突の死ジェネレータースクリプト (参考):** [fumiyas/home-commands/echo-sd](https://github.com/fumiyas/home-commands/blob/master/echo-sd)
 *   **Discord.py:** [Rapptz/discord.py](https://github.com/Rapptz/discord.py)
 *   **Pillow (PIL Fork):** [python-pillow/Pillow](https://github.com/python-pillow/Pillow)
