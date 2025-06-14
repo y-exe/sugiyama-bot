@@ -21,6 +21,8 @@ import traceback
 import unicodedata
 import xml.etree.ElementTree as ET
 import pytz
+from pydub import AudioSegment
+from pydub.exceptions import CouldntDecodeError 
 
 # ========================== CONFIGURATION & INITIALIZATION ==========================
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
@@ -520,7 +522,7 @@ async def on_ready():
     try: synced = await bot.tree.sync(); print(f'Synced {len(synced)} slash commands.')
     except Exception as e: print(f"Slash command sync failed: {e}")
     if not cleanup_finished_games_task.is_running(): cleanup_finished_games_task.start()
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name="help"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="help"))
     print("Bot is ready.")
 
 @bot.event
@@ -676,17 +678,18 @@ async def cleanup_finished_games_task():
 async def help_command(ctx: commands.Context):
     embed = discord.Embed(title="杉山啓太Bot コマンド一覧", color=discord.Color.blue())
     cmds = [
-        ("watermark +[画像添付]", "添付画像にウォーターマークを合成。"),
+        ("watermark + [画像添付]", "添付画像にウォーターマークを合成。"),
         ("/imakita", "過去30分のチャットを3行で要約。(スラッシュコマンド・どこでも利用可)"),
         ("5000 [上文字列] [下文字列] (hoshii) (rainbow)", "「5000兆円欲しい！」画像を生成。"),
-        ("gaming +[画像添付]", "添付画像をゲーミング風GIFに変換。"),
+        ("gaming + [画像添付]", "添付画像をゲーミング風GIFに変換。"),
         ("othello (@相手ユーザー)", 
          "・`othello` : オセロの対戦相手を募集します。\n"
-         "・`othello @メンション`: 指定したユーザーと即時対戦を開始します。\n"),
-        ("leave (または othello leave)", "進行中のオセロゲームから離脱します。"),
-        ("point (または othello points)", "あなたの現在のオセロポイントとランキングを表示。"),
-        ("voice +[音声ファイル添付]", "添付音声の声をRVCで変換。（30秒までを推奨）"),
-        ("help", "このヘルプを表示。")
+         "・`othello @メンション` : 指定したユーザーと即時対戦を開始します。\n"
+         "・`othello leave` : 進行中のオセロゲームから離脱します。\n"
+         "・`othello point` : あなたの現在のオセロポイントとランキングを表示。\n"),
+        ("voice + [音声ファイル添付]", "添付音声の声をボイチェンでやまかわてるきの声に変換。（45秒まで）"),
+        ("help", "このヘルプを表示。"),
+        ("その他コマンド", "https://github.com/y-exe/sugiyama-bot")
     ]
     for name, value in cmds: embed.add_field(name=name, value=value, inline=False)
     status = "Available" if not GEMINI_API_UNAVAILABLE else "Not Available"
@@ -778,7 +781,7 @@ async def gaming_command(ctx: commands.Context):
             gif_buffer.seek(0, io.SEEK_END); file_size = gif_buffer.tell(); gif_buffer.seek(0)
             if file_size > MAX_FILE_SIZE_BYTES: return await ctx.send(f"生成GIFのファイルサイズが大きすぎます。")
             out_fname = f"gaming_{os.path.splitext(attachment.filename)[0]}.gif"
-            await ctx.send(f"ゲーミング風GIFを生成しました！{' (リサイズ済)' if resized else ''}", file=discord.File(fp=gif_buffer, filename=out_fname))
+            await ctx.send(f"**ゲーミング風GIFを生成完了**\nうまくいかない場合は黒白ではなくカラー画像を添付してください {' (リサイズ済)' if resized else ''}", file=discord.File(fp=gif_buffer, filename=out_fname))
         except Exception as e: await ctx.send(f"ゲーミングGIFの生成中にエラー: {e}")
 
 @bot.command(name="othello")
@@ -918,22 +921,59 @@ async def rvc_voice_convert_command(ctx: commands.Context):
     attachment = ctx.message.attachments[0]
     if not (attachment.filename.lower().endswith(('.wav', '.mp3', '.flac', '.m4a'))):
         await ctx.send("サポートされている音声ファイル形式は .wav, .mp3, .flac, .m4a です。"); return
+
+    audio_bytes_io = io.BytesIO()
+    await attachment.save(audio_bytes_io)
+    audio_bytes_io.seek(0) 
+
+    try:
+        temp_audio_stream_for_check = io.BytesIO(audio_bytes_io.getvalue()) 
+        temp_audio_stream_for_check.seek(0)
+
+        audio = AudioSegment.from_file(temp_audio_stream_for_check, format=attachment.filename.split('.')[-1].lower())
+        duration_seconds = len(audio) / 1000.0
+        print(f"Attached audio duration: {duration_seconds:.2f} seconds")
+        temp_audio_stream_for_check.close() 
+
+        if duration_seconds > 45.0:
+            await ctx.send(f"エラー: 音声ファイルが長すぎます ({duration_seconds:.1f}秒)。45秒以下のファイルを添付してください。")
+            audio_bytes_io.close() 
+            return
+    except CouldntDecodeError:
+        await ctx.send("エラー: 音声ファイルの形式を認識できませんでした。有効な音声ファイルか確認してください。")
+        audio_bytes_io.close()
+        return
+    except Exception as e_dur:
+        await ctx.send(f"エラー: 音声ファイルの長さ確認中に問題が発生しました: {e_dur}")
+        traceback.print_exc()
+        audio_bytes_io.close()
+        return
+    
     rvc_infer_script_full_path = os.path.join(RVC_PROJECT_ROOT_PATH, RVC_INFER_SCRIPT_SUBPATH)
     rvc_model_full_path = os.path.join(RVC_PROJECT_ROOT_PATH, RVC_MODEL_DIR_IN_PROJECT, RVC_MODEL_NAME_WITH_EXT)
     rvc_index_file_name_no_ext, _ = os.path.splitext(RVC_MODEL_NAME_WITH_EXT)
     rvc_index_full_path = os.path.join(RVC_PROJECT_ROOT_PATH, RVC_MODEL_DIR_IN_PROJECT, f"{rvc_index_file_name_no_ext}.index")
+
     if not os.path.exists(rvc_infer_script_full_path):
-        await ctx.send("エラー: RVC推論スクリプトが見つかりません。Bot管理者に連絡してください。"); print(f"Voice command error: RVC inference script not found at {rvc_infer_script_full_path}"); return
+        await ctx.send("エラー: RVC推論スクリプトが見つかりません。Bot管理者に連絡してください。"); print(f"Voice command error: RVC inference script not found at {rvc_infer_script_full_path}"); audio_bytes_io.close(); return
     if not os.path.exists(rvc_model_full_path):
-        await ctx.send(f"エラー: RVCモデル '{RVC_MODEL_NAME_WITH_EXT}' が見つかりません。Bot管理者に連絡してください。"); print(f"Voice command error: RVC model not found at {rvc_model_full_path}"); return
-    processing_message = await ctx.send("音声変換を開始します... 💻\n**CPUで処理しているため、音声の長さによっては完了まで数分かかる場合があります。**\nしばらくお待ちください... ⏳")
+        await ctx.send(f"エラー: RVCモデル '{RVC_MODEL_NAME_WITH_EXT}' が見つかりません。Bot管理者に連絡してください。"); print(f"Voice command error: RVC model not found at {rvc_model_full_path}"); audio_bytes_io.close(); return
+
+    processing_message = await ctx.send("やまかわボイチェンの処理をしています... \n**しばらくお待ちください... (目安:20~50秒)")
+
     base_filename, file_extension = os.path.splitext(attachment.filename)
     timestamp = datetime.datetime.now(JST).strftime("%Y%m%d%H%M%S%f"); unique_id = f"{ctx.author.id}_{ctx.message.id}_{timestamp}"
     input_filename_rvc = f"input_{unique_id}{file_extension}"; output_filename_rvc = f"output_{unique_id}{file_extension}"
     input_filepath_abs_rvc = os.path.abspath(os.path.join(RVC_INPUT_AUDIO_DIR, input_filename_rvc))
     output_filepath_abs_rvc = os.path.abspath(os.path.join(RVC_OUTPUT_AUDIO_DIR, output_filename_rvc))
+
     try:
-        await attachment.save(input_filepath_abs_rvc)
+        with open(input_filepath_abs_rvc, 'wb') as f_out:
+            audio_bytes_io.seek(0) 
+            f_out.write(audio_bytes_io.getbuffer())
+        print(f"Saved input audio to: {input_filepath_abs_rvc}")
+        audio_bytes_io.close() 
+
         effective_python_executable = sys.executable 
         print(f"RVC用 (共有仮想環境の) Python実行ファイル: {effective_python_executable}")
         command = [effective_python_executable, rvc_infer_script_full_path, "--f0up_key", str(RVC_FIXED_TRANSPOSE), "--input_path", input_filepath_abs_rvc, "--opt_path", output_filepath_abs_rvc, "--model_name", RVC_MODEL_NAME_WITH_EXT,]
@@ -945,14 +985,16 @@ async def rvc_voice_convert_command(ctx: commands.Context):
         if stdout_str: print(f"--- RVC STDOUT ---\n{stdout_str}\n------------------")
         if stderr_str: print(f"--- RVC STDERR ---\n{stderr_str}\n------------------")
         if process.returncode != 0:
-            print(f"RVCプロセスがエラーコード {process.returncode} で終了しました。"); await processing_message.edit(content=f"音声変換中にエラーが発生しました。\nBotのログを確認してください。"); return
+            print(f"RVCプロセスがエラーコード {process.returncode} で終了しました。"); await processing_message.edit(content=f"音声変換中にエラーが発生しました。"); return
         if os.path.exists(output_filepath_abs_rvc) and os.path.getsize(output_filepath_abs_rvc) > 0:
-            await processing_message.edit(content="音声変換が完了しました！ ✨"); await ctx.send(file=discord.File(output_filepath_abs_rvc, filename=output_filename_rvc))
+            await processing_message.edit(content="**やまかわてるきボイチェンの処理が完了しました**\nうまくいかない場合はBGMを抜いてみてください"); await ctx.send(file=discord.File(output_filepath_abs_rvc, filename=output_filename_rvc))
         else:
             await processing_message.edit(content="変換は成功しましたが、出力ファイルが見つかりませんでした。"); print(f"RVC出力ファイルが見つからないか、サイズが0です: {output_filepath_abs_rvc}")
     except Exception as e:
         await processing_message.edit(content=f"予期せぬエラーが発生しました: {e}"); print(f"予期せぬエラー (rvc_voice_convert_command): {e}"); traceback.print_exc()
     finally:
+        if 'audio_bytes_io' in locals() and not audio_bytes_io.closed:
+            audio_bytes_io.close()
         if os.path.exists(input_filepath_abs_rvc):
             try: os.remove(input_filepath_abs_rvc)
             except Exception as e_rem: print(f"入力一時ファイルの削除に失敗: {e_rem}")
