@@ -18,7 +18,7 @@ AIに修正もらってたら自分でもわけわかめなコードになって
 
 ## 概要
 
-杉山啓太Bot (`ymkw.py`) は、Discordサーバーでの遊び系の追加機能をするために開発されたBotです。
+杉山啓太Bot (`ymkw.py`) は、Discordサーバーでの遊び系の追加機能をするために開発されたBotです。<br>
 AIによる会話要約、RVC技術を用いた音声変換、ウォーターマークマニア生成、そしてオセロなど、幅広い機能を提供します。
 
 コマンドの実行は、許可されたチャンネルでコマンド名（例: `totusi`）と引数を入力するだけで直感的に行えます (プレフィックス不要)。
@@ -75,8 +75,6 @@ C:\Bot
 　├── venv\ # Python共有仮想環境 (ユーザーが作成・設定)
 　└── ... # RVCのその他ファイル群
 ```
-
-(各ファイル/フォルダの詳細は以前の回答を参照してください)
 
 ## 導入手順 (Windows CPU環境向け)
 
@@ -158,7 +156,7 @@ C:\Bot
 
 ## クレジット・参考プロジェクト
 
-このBotは以下の素晴らしいプロジェクトやAPIを利用しています。
+このBotは以下のプロジェクトをAPIを利用・参考にしています。
 
 *   **RVC (Retrieval-based Voice Conversion):** [RVC-Project/Retrieval-based-Voice-Conversion-WebUI](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI)
 *   **Google Gemini API:** [ai.google.dev](https://ai.google.dev/)
