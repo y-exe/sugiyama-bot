@@ -91,8 +91,8 @@ C:\Bot
 2.  **RVCプロジェクトのダウンロード:** コマンドプロンプト/PowerShellで `C:\Bot` に移動し、`git clone https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI.git RVC_Project` を実行。
 3.  **必要なモデルファイル等の配置:**
     *   **HuBERTモデル (`hubert_base.pt`):** `C:\Bot\RVC_Project\assets\hubert\hubert_base.pt` に配置。 (ダウンロード: [Hugging Face](https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/hubert_base.pt))
-    *   **RVC学習済みモデル (`ymkw.pth`):** `C:\Bot\RVC_Project\assets\weights\` に配置。 ダウンロード：[mega.nz](https://mega.nz/file/Y6E2SQIY#SjKYBZjjps_MhVZ6J0HRsHtKUw-sMs5qhawVNzd2SqM)
-    *   **ウォーターマーク用テンプレート画像:** `C:\Bot\assets\watermark_templates\` に配置。ダウンロード：[mega.nz](https://mega.nz/folder/A2dQRD6Q#i5Aukald6tl6LA4CG9B72g)
+    *   **RVC学習済みモデル (`ymkw.pth`):** `C:\Bot\RVC_Project\assets\weights\` に配置。 (ダウンロード：[mega.nz](https://mega.nz/file/Y6E2SQIY#SjKYBZjjps_MhVZ6J0HRsHtKUw-sMs5qhawVNzd2SqM))
+    *   **ウォーターマーク用テンプレート画像:** `C:\Bot\assets\watermark_templates\` に配置。(ダウンロード：[mega.nz](https://mega.nz/folder/A2dQRD6Q#i5Aukald6tl6LA4CG9B72g))
 4.  **`.env` ファイルの作成:** `C:\Bot` に `.env` ファイルを作成し、以下を記述 (実際のキーに置換):
     ```env
     DISCORD_BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN"
