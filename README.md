@@ -156,7 +156,7 @@ C:\Bot
 
 ## クレジット・参考プロジェクト
 
-このBotは以下のプロジェクトをAPIを利用・参考にしています。
+このBotは以下のプロジェクトやAPIを利用・参考にしています。
 
 *   **RVC (Retrieval-based Voice Conversion):** [RVC-Project/Retrieval-based-Voice-Conversion-WebUI](https://github.com/RVC-Project/Retrieval-based-Voice-Conversion-WebUI)
 *   **Google Gemini API:** [ai.google.dev](https://ai.google.dev/)
