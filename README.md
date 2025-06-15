@@ -83,7 +83,10 @@ C:\Bot
 1.  **Python 3.10.11 (または3.10.x):** [python.org](https://www.python.org/downloads/release/python-31011/) より入手し、インストール時に **「Add Python to PATH」に必ずチェック**。
 2.  **Git:** [git-scm.com](https://git-scm.com/downloads) より入手し、インストール。
 3.  **FFmpeg:** [ffmpeg.org](https://ffmpeg.org/download.html) 経由でWindowsビルドを入手。解凍後、`bin` フォルダにPATHを通し、**PC/ターミナルを再起動**。確認: `ffmpeg -version`。
-4.  **Microsoft C++ Build Tools:** [visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/) より入手。「ワークロード」で **「C++によるデスクトップ開発」** を選択。**インストール後、PCを再起動。**
+```env
+   winget install --id=Gyan.FFmpeg -e
+ ```
+5.  **Microsoft C++ Build Tools:** [visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/) より入手。「ワークロード」で **「C++によるデスクトップ開発」** を選択。**インストール後、PCを再起動。**
 
 ### II. プロジェクトのセットアップ
 
