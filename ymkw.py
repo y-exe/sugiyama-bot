@@ -27,13 +27,13 @@ from pydub.exceptions import CouldntDecodeError
 # ========================== CONFIGURATION & INITIALIZATION ==========================
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
-DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN", "YOUR_DISCORD_BOT_TOKEN_PLACEHOLDER")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_PLACEHOLDER")
+DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WEATHER_API_BASE_URL = "https://weather.tsukumijima.net/api/forecast/city/"
 PRIMARY_AREA_XML_URL = "https://weather.tsukumijima.net/primary_area.xml"
 EXCHANGE_RATE_API_URL = "https://exchange-rate-api.krnk.org/api/rate"
 SHORTURL_API_ENDPOINT = "https://xgd.io/V1/shorten"
-SHORTURL_API_KEY = os.getenv("SHORTURL_API_KEY", "cdb0e464ab5ed48895dacead55cd6be3")
+SHORTURL_API_KEY = os.getenv("SHORTURL_API_KEY")
 AMAZON_SHORTURL_ENDPOINT = "https://www.amazon.co.jp/associates/sitestripe/getShortUrl"
 
 
@@ -52,17 +52,29 @@ JST = pytz.timezone("Asia/Tokyo")
 MAX_FILE_SIZE_BYTES = int(4.8 * 1024 * 1024)
 MIN_IMAGE_DIMENSION = 300
 TEMPLATES_BASE_PATH = os.path.join(os.path.dirname(__file__), "assets", "watermark_templates")
-TEMPLATES_DATA = [
+TEMPLATES_DATA = [ 
     {"name": "POCO F3.png", "user_ratio_str": "3/4", "target_size": (3000, 4000)},
     {"name": "GalaxyS23 2.png", "user_ratio_str": "563/1000", "target_size": (2252, 4000)},
     {"name": "IPHONE 11 PRO MAX.png", "user_ratio_str": "672/605", "target_size": (4032, 3630)},
     {"name": "motorola eage 50s pro.png", "user_ratio_str": "4/3", "target_size": (4096, 3072)},
-    {"name": "XIAOMI 15 Ultra 2.png", "user_ratio_str": "320/277", "target_size": (1280, 1108)},
+    {"name": "XIAOMI 15 Ultra 1.png", "user_ratio_str": "320/277", "target_size": (1280, 1108)}, 
     {"name": "Galaxy S23.png", "user_ratio_str": "1000/563", "target_size": (4000, 2252)},
     {"name": "XIAOMI13.png", "user_ratio_str": "512/329", "target_size": (4096, 2632)},
     {"name": "Vivo X200 Pro.png", "user_ratio_str": "512/329", "target_size": (4096, 2632)},
     {"name": "OPPO Find X5 2.png", "user_ratio_str": "512/439", "target_size": (4096, 3512)},
-    {"name": "OPPO Find X5.png", "user_ratio_str": "3/4", "target_size": (1080, 1440)}
+    {"name": "OPPO Find X5.png", "user_ratio_str": "3/4", "target_size": (1080, 1440)},
+    {"name": "NIKON1J5.png", "user_ratio_str": "548/461", "target_size": (4384, 3688)},
+    {"name": "REDMAGIC9PRO.png", "user_ratio_str": "9/13", "target_size": (3060, 4420)},
+    {"name": "REDMI121.png", "user_ratio_str": "64/85", "target_size": (3072, 4080)},
+    {"name": "REDMI122.png", "user_ratio_str": "85/64", "target_size": (4080, 3072)},
+    {"name": "OPPOFINDX5PRO.png", "user_ratio_str": "256/363", "target_size": (3072, 4356)},
+    {"name": "ONELINE.png", "user_ratio_str": "3175/2458", "target_size": (6530, 4916)},
+    {"name": "NOTHINGPHONE2A.png", "user_ratio_str": "3265/2458", "target_size": (6530, 4916)}, 
+    {"name": "VIVOX60TPRO2.png", "user_ratio_str": "3/4", "target_size": (3000, 4000)},
+    {"name": "VIVOX60TPRO.png", "user_ratio_str": "4/3", "target_size": (4080, 3060)},
+    {"name": "ONEPLUS11R5G.png", "user_ratio_str": "8/7", "target_size": (8192, 7168)},
+    {"name": "XIAOMI15ULTRA 3.png", "user_ratio_str": "1151/1818", "target_size": (2302, 3636)},
+    {"name": "XIAOMI15ULTRA 2.png", "user_ratio_str": "568/503", "target_size": (4544, 4024)} 
 ]
 
 GREEN_SQUARE = "<:o_0:1380626312976138400>"
@@ -533,6 +545,7 @@ async def on_message(message: discord.Message):
     original_content = message.content
     content_lower_stripped = original_content.strip().lower()
     
+    # 'setchannel' コマンドは常に処理
     if content_lower_stripped.startswith("setchannel"):
         _content_backup = message.content
         message.content = f"{get_dummy_prefix(bot, message)}setchannel"
@@ -540,29 +553,42 @@ async def on_message(message: discord.Message):
         message.content = _content_backup
         return
 
+    # 許可されていないチャンネルからのメッセージは無視
     if message.channel.id not in allowed_channels:
         return
 
-    command_parts = original_content.split(" ", 1)
+    # プレフィックスなしコマンドの処理
+    command_parts = original_content.split(" ", 2) # 最大2回分割してサブコマンドまで考慮
     potential_command_name = command_parts[0].lower()
     
     # オセロのサブコマンド風呼び出しに対応
+    is_othello_subcommand = False
     if potential_command_name == "othello" and len(command_parts) > 1:
-        sub_command_parts = command_parts[1].split(" ", 1)
-        sub_command_name = sub_command_parts[0].lower()
+        sub_command_name = command_parts[1].lower()
         if sub_command_name == "leave":
             potential_command_name = "leave"
-            command_parts = [potential_command_name] # 引数なしコマンドとして扱う
+            is_othello_subcommand = True
         elif sub_command_name == "point" or sub_command_name == "points":
             potential_command_name = "othello_points"
-            command_parts = [potential_command_name]
+            is_othello_subcommand = True
+        # "othello @mention" の場合は potential_command_name は "othello" のまま
     
     command_obj = bot.get_command(potential_command_name)
 
     if command_obj:
         print(f"Prefix-less command '{potential_command_name}' detected from '{message.author.name}'. Processing...")
         _content_backup_cmd = message.content
-        message.content = f"{get_dummy_prefix(bot, message)}{original_content}"
+        
+        args_for_command = ""
+        if is_othello_subcommand: # othello leave, othello point の場合
+            # これらのコマンドは引数を取らないので、引数部分は空
+            pass
+        elif potential_command_name == "othello" and len(command_parts) > 1: # othello @mention の場合
+            args_for_command = command_parts[1] # メンション部分
+        elif len(command_parts) > 1 : # その他のコマンドで引数がある場合
+            args_for_command = command_parts[1]
+
+        message.content = f"{get_dummy_prefix(bot, message)}{potential_command_name} {args_for_command}".strip()
         
         print(f"  Modified message content for processing: '{message.content}'")
         await bot.process_commands(message)
@@ -634,30 +660,44 @@ async def othello_afk_timeout(game: OthelloGame):
     game_session_from_active = active_games.get(game_message_id)
     if game_session_from_active and game_session_from_active.get("game") == game and not game.game_over:
         print(f"Othello Game #{game.game_id}: AFK timeout for player {game.players.get(game.current_player)}")
-        afk_player_color = game.current_player
-        winner_player_color = WHITE if afk_player_color == BLACK else BLACK
-        game.game_over = True; game.winner = winner_player_color
+        
+        afk_player_id = game.players.get(game.current_player)
+        opponent_id = game.get_opponent_player_id() # AFKしなかった相手
+
+        game.game_over = True
+        game.winner = WHITE if game.current_player == BLACK else BLACK # AFKしなかった方が勝ち
         setattr(game, 'ended_by_action', 'afk')
-        try:
-            channel = bot.get_channel(game.channel_id)
-            if not channel:
-                print(f"AFK Timeout: Channel {game.channel_id} not found for game {game.game_id}")
-                if game.message_id in active_games: OthelloGame._release_game_id_static(game.game_id); del active_games[game.message_id]
-                return
-            message_to_update = None
+        
+        bs = sum(r.count(BLACK) for r in game.board)
+        ws = sum(r.count(WHITE) for r in game.board)
+        score_diff = abs(bs - ws)
+        
+        afk_player_user = await bot.fetch_user(afk_player_id) if afk_player_id else None
+        winner_player_user = await bot.fetch_user(opponent_id) if opponent_id else None
+        afk_mention = afk_player_user.mention if afk_player_user else f"ID:{afk_player_id}"
+        winner_mention = winner_player_user.mention if winner_player_user else f"ID:{opponent_id}"
+        
+        point_message = ""
+        if opponent_id and afk_player_id:
+            # AFKした側が負け、相手が勝ち
+            if game.winner == game.players.get(opponent_id): # 相手が勝っている状態（石が多い）
+                update_player_points(opponent_id, score_diff)
+                update_player_points(afk_player_id, -score_diff)
+                point_message = f"({winner_mention} +{score_diff}pt, {afk_mention} -{score_diff}pt)"
+            else: # 相手が負けている状態（石が少ない）
+                update_player_points(opponent_id, math.ceil(score_diff / 2)) # 相手に石差の半分
+                # AFKした側は変動なし
+                point_message = f"({winner_mention} +{math.ceil(score_diff / 2)}pt)"
+        
+        channel = bot.get_channel(game.channel_id)
+        if channel:
+            await channel.send(f"ゲーム #{game.game_id}: {afk_mention} が3分以上行動しなかったため、{winner_mention} の勝利です！ {point_message}")
+        
+        message_to_update = None
+        if channel and game.message_id:
             try: message_to_update = await channel.fetch_message(game.message_id)
-            except Exception as e_fetch: print(f"AFK: Could not fetch game message {game.message_id}: {e_fetch}")
-            afk_player_id = game.players.get(afk_player_color); winner_player_id = game.players.get(winner_player_color)
-            afk_player_user = await bot.fetch_user(afk_player_id) if afk_player_id else None
-            winner_player_user = await bot.fetch_user(winner_player_id) if winner_player_id else None
-            afk_mention = afk_player_user.mention if afk_player_user else f"ID:{afk_player_id}"
-            winner_mention = winner_player_user.mention if winner_player_user else f"ID:{winner_player_id}"
-            await channel.send(f"ゲーム #{game.game_id}: {afk_mention} が3分以上行動しなかったため、{winner_mention} の勝利です！ (ポイント変動なし)")
-            await send_othello_board_message(channel, game_session_from_active, message_to_update=message_to_update)
-        except Exception as e:
-            print(f"Error handling AFK timeout for game #{game.game_id}: {e}"); traceback.print_exc()
-            if game.message_id in active_games and active_games.get(game.message_id, {}).get("game") == game:
-                OthelloGame._release_game_id_static(game.game_id); del active_games[game.message_id]
+            except: pass
+        await send_othello_board_message(channel or None, game_session_from_active, message_to_update=message_to_update)
 
 @tasks.loop(minutes=5)
 async def cleanup_finished_games_task():
@@ -674,27 +714,27 @@ async def cleanup_finished_games_task():
     if games_to_remove_ids: print(f"Cleaned up {len(games_to_remove_ids)} old finished othello games from active_games.")
 
 # ================================== DISCORD COMMANDS ==================================
-@bot.command(name="help")
-async def help_command(ctx: commands.Context):
-    embed = discord.Embed(title="杉山啓太Bot コマンド一覧", color=discord.Color.blue())
-    cmds = [
-        ("watermark + [画像添付]", "添付画像にウォーターマークを合成。"),
-        ("/imakita", "過去30分のチャットを3行で要約。(スラッシュコマンド・どこでも利用可)"),
-        ("5000 [上文字列] [下文字列] (hoshii) (rainbow)", "「5000兆円欲しい！」画像を生成。"),
-        ("gaming + [画像添付]", "添付画像をゲーミング風GIFに変換。"),
-        ("othello (@相手ユーザー)", 
-         "・`othello` : オセロの対戦相手を募集します。\n"
-         "・`othello @メンション` : 指定したユーザーと即時対戦を開始します。\n"
-         "・`othello leave` : 進行中のオセロゲームから離脱します。\n"
-         "・`othello point` : あなたの現在のオセロポイントとランキングを表示。\n"),
-        ("voice + [音声ファイル添付]", "添付音声の声をボイチェンでやまかわてるきの声に変換。（45秒まで）"),
-        ("help", "このヘルプを表示。"),
-        ("その他コマンド", "https://github.com/y-exe/sugiyama-bot")
-    ]
-    for name, value in cmds: embed.add_field(name=name, value=value, inline=False)
-    status = "Available" if not GEMINI_API_UNAVAILABLE else "Not Available"
-    embed.set_footer(text=f"Gemini Text API Status: {status}")
-    await ctx.send(embed=embed)
+# @bot.command(name="help")
+# async def help_command(ctx: commands.Context):
+#     embed = discord.Embed(title="杉山啓太Bot コマンド一覧", color=discord.Color.blue())
+#     cmds = [
+#         ("watermark + [画像添付]", "添付画像にウォーターマークを合成。"),
+#         ("/imakita", "過去30分のチャットを3行で要約。(スラッシュコマンド・どこでも利用可)"),
+#         ("5000 [上文字列] [下文字列] (hoshii) (rainbow)", "「5000兆円欲しい！」画像を生成。"),
+#         ("gaming + [画像添付]", "添付画像をゲーミング風GIFに変換。"),
+#         ("othello (@相手ユーザー)", 
+#          "・`othello` : オセロの対戦相手を募集します。\n"
+#          "・`othello @メンション` : 指定したユーザーと即時対戦を開始します。\n"
+#          "・`othello leave` : 進行中のオセロゲームから離脱します。\n"
+#          "・`othello point` : あなたの現在のオセロポイントとランキングを表示。\n"),
+#         ("voice + [音声ファイル添付]", "添付音声の声をボイチェンでやまかわてるきの声に変換。（45秒まで）"),
+#         ("help", "このヘルプを表示。"),
+#         ("その他コマンド", "https://github.com/y-exe/sugiyama-bot")
+#     ]
+#     for name, value in cmds: embed.add_field(name=name, value=value, inline=False)
+#     status = "Available" if not GEMINI_API_UNAVAILABLE else "Not Available"
+#     embed.set_footer(text=f"Gemini Text API Status: {status}")
+#     await ctx.send(embed=embed)
 
 @bot.command(name="setchannel")
 @commands.has_permissions(administrator=True)
@@ -883,13 +923,27 @@ async def leave_othello_game_command(ctx: commands.Context):
         if str(reaction.emoji) == "✅":
             game_to_leave.game_over = True
             setattr(game_to_leave, 'ended_by_action', 'leave')
+            
             opponent_id = next(pid for color, pid in game_to_leave.players.items() if pid != player_id_to_leave)
-            game_to_leave.winner = next(color for color, pid in game_to_leave.players.items() if pid == opponent_id)
+            game_to_leave.winner = next(color for color, pid in game_to_leave.players.items() if pid == opponent_id) 
+
+            bs = sum(r.count(BLACK) for r in game_to_leave.board)
+            ws = sum(r.count(WHITE) for r in game_to_leave.board)
+            score_diff = abs(bs - ws)
+            point_message = ""
+
+            if opponent_id and player_id_to_leave:
+                update_player_points(opponent_id, math.ceil(score_diff / 2)) 
+                update_player_points(player_id_to_leave, -score_diff)      
+                winner_user_for_msg = await bot.fetch_user(opponent_id)
+                point_message = f"({winner_user_for_msg.mention if winner_user_for_msg else '相手'} +{math.ceil(score_diff / 2)}pt, {ctx.author.mention} -{score_diff}pt)"
+
             try:
                 winner_user = await bot.fetch_user(opponent_id)
                 loser_user = await bot.fetch_user(player_id_to_leave)
-                await ctx.send(f"{loser_user.mention} がゲーム #{game_to_leave.game_id} から離脱しました。{winner_user.mention} の勝利です！ (ポイント変動なし)")
-            except Exception as e_fetch: print(f"Error fetching users on game leave by command: {e_fetch}")
+                await ctx.send(f"{loser_user.mention} がゲーム #{game_to_leave.game_id} から離脱しました。{winner_user.mention} の勝利です！ {point_message}")
+            except Exception as e_fetch: print(f"Error fetching users on game leave: {e_fetch}")
+            
             board_channel = bot.get_channel(game_to_leave.channel_id) or ctx.channel
             board_message_to_update = None
             if board_channel and game_to_leave.message_id:
@@ -959,7 +1013,7 @@ async def rvc_voice_convert_command(ctx: commands.Context):
     if not os.path.exists(rvc_model_full_path):
         await ctx.send(f"エラー: RVCモデル '{RVC_MODEL_NAME_WITH_EXT}' が見つかりません。Bot管理者に連絡してください。"); print(f"Voice command error: RVC model not found at {rvc_model_full_path}"); audio_bytes_io.close(); return
 
-    processing_message = await ctx.send("やまかわボイチェンの処理をしています... \n**しばらくお待ちください... (目安:20~50秒)")
+    processing_message = await ctx.send("**やまかわボイチェンの処理をしています...** \nしばらくお待ちください... (目安:20~50秒)")
 
     base_filename, file_extension = os.path.splitext(attachment.filename)
     timestamp = datetime.datetime.now(JST).strftime("%Y%m%d%H%M%S%f"); unique_id = f"{ctx.author.id}_{ctx.message.id}_{timestamp}"
