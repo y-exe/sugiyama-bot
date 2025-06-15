@@ -534,7 +534,7 @@ async def on_ready():
     try: synced = await bot.tree.sync(); print(f'Synced {len(synced)} slash commands.')
     except Exception as e: print(f"Slash command sync failed: {e}")
     if not cleanup_finished_games_task.is_running(): cleanup_finished_games_task.start()
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="help"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="/help 杉山啓太Bot"))
     print("Bot is ready.")
 
 @bot.event
@@ -545,33 +545,32 @@ async def on_message(message: discord.Message):
     original_content = message.content
     content_lower_stripped = original_content.strip().lower()
     
-    # 'setchannel' コマンドは常に処理
     if content_lower_stripped.startswith("setchannel"):
         _content_backup = message.content
-        message.content = f"{get_dummy_prefix(bot, message)}setchannel"
+        # ダミープレフィックスとコマンド名を正しく連結
+        message.content = f"{get_dummy_prefix(bot, message)}setchannel" 
         await bot.process_commands(message)
         message.content = _content_backup
         return
 
-    # 許可されていないチャンネルからのメッセージは無視
     if message.channel.id not in allowed_channels:
         return
 
-    # プレフィックスなしコマンドの処理
-    command_parts = original_content.split(" ", 2) # 最大2回分割してサブコマンドまで考慮
+    command_parts = original_content.split(" ", 1)
     potential_command_name = command_parts[0].lower()
     
-    # オセロのサブコマンド風呼び出しに対応
     is_othello_subcommand = False
     if potential_command_name == "othello" and len(command_parts) > 1:
-        sub_command_name = command_parts[1].lower()
+        sub_command_parts = command_parts[1].split(" ", 1)
+        sub_command_name = sub_command_parts[0].lower()
         if sub_command_name == "leave":
             potential_command_name = "leave"
-            is_othello_subcommand = True
+            command_parts = [potential_command_name] 
+            is_othello_subcommand = True # サブコマンドとしてマーク
         elif sub_command_name == "point" or sub_command_name == "points":
             potential_command_name = "othello_points"
-            is_othello_subcommand = True
-        # "othello @mention" の場合は potential_command_name は "othello" のまま
+            command_parts = [potential_command_name]
+            is_othello_subcommand = True # サブコマンドとしてマーク
     
     command_obj = bot.get_command(potential_command_name)
 
@@ -579,16 +578,20 @@ async def on_message(message: discord.Message):
         print(f"Prefix-less command '{potential_command_name}' detected from '{message.author.name}'. Processing...")
         _content_backup_cmd = message.content
         
-        args_for_command = ""
-        if is_othello_subcommand: # othello leave, othello point の場合
-            # これらのコマンドは引数を取らないので、引数部分は空
-            pass
-        elif potential_command_name == "othello" and len(command_parts) > 1: # othello @mention の場合
-            args_for_command = command_parts[1] # メンション部分
-        elif len(command_parts) > 1 : # その他のコマンドで引数がある場合
-            args_for_command = command_parts[1]
+        prefix_to_use = get_dummy_prefix(bot, message)
+        args_part = "" # デフォルトは空
 
-        message.content = f"{get_dummy_prefix(bot, message)}{potential_command_name} {args_for_command}".strip()
+        if is_othello_subcommand:
+            # othello leave や othello point の場合、引数はない (またはコマンド側で ctx.message.content から取得しない)
+            # そのため、コマンド名だけを process_commands に渡す
+            message.content = f"{prefix_to_use}{potential_command_name}"
+        elif len(command_parts) > 1:
+             # 通常のコマンドで引数がある場合
+            args_part = command_parts[1]
+            message.content = f"{prefix_to_use}{potential_command_name} {args_part}".strip() # ★★★ コマンド名と引数の間にスペース ★★★
+        else:
+            # 引数がないコマンドの場合
+            message.content = f"{prefix_to_use}{potential_command_name}"
         
         print(f"  Modified message content for processing: '{message.content}'")
         await bot.process_commands(message)
