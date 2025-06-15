@@ -88,7 +88,7 @@ C:\Bot
 ```env
    winget install --id=Gyan.FFmpeg -e
  ```
-確認: `ffmpeg -version`。
+確認: `ffmpeg -version`。<br>
 4.  **Microsoft C++ Build Tools:** [visualstudio.microsoft.com/visual-cpp-build-tools/](https://visualstudio.microsoft.com/visual-cpp-build-tools/) より入手。「ワークロード」で **「C++によるデスクトップ開発」** を選択。**インストール後、PCを再起動。**
 
 ### II. プロジェクトのセットアップ
@@ -151,14 +151,14 @@ C:\Bot
     ```
 3.  コンソールログを確認し、Discordで動作テスト。
 
-### VI. 再起動の手順
- ```bash
+### VII. 再起動の手順
+   ```bash
     cd C:\Bot\RVC_Project
     Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
     .\venv\Scripts\Activate.ps1
     cd C:\Bot
     py ymkw.py
-```
+   ```
 
 ## トラブルシューティング
 
@@ -189,4 +189,4 @@ C:\Bot
 
 ---
 
-© yexe.net
+© yexe.net  
