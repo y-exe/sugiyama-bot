@@ -165,6 +165,7 @@ C:\Bot
 ### VII. 再起動の手順
    ```powershell
     cd C:\Bot\RVC_Project
+    Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
     .\venv\Scripts\Activate.ps1
     cd C:\Bot
     py ymkw.py
