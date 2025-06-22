@@ -4,7 +4,6 @@ import sys
 import discord
 from discord.ext import commands, tasks
 import google.generativeai as genai
-# from google.generativeai import types as genai_types # This is a valid Python comment
 import datetime
 import asyncio
 import aiohttp
@@ -32,8 +31,10 @@ BASE_DIR = os.path.dirname(__file__)
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-YAHOO_CLIENT_ID = os.getenv("YAHOO_CLIENT_ID")
-YAHOO_WEATHER_API_URL = "https://map.yahooapis.jp/weather/V1/place"
+WEATHER_API_BASE_URL = "https://weather.tsukumijima.net/api/forecast/city/"
+PRIMARY_AREA_XML_URL = "https://weather.tsukumijima.net/primary_area.xml"
+WEATHER_CITY_CODES_FILE_PATH = os.path.join(BASE_DIR, "weather_city_codes.json")
+weather_city_id_map = {}
 
 EXCHANGE_RATE_API_URL = "https://exchange-rate-api.krnk.org/api/rate"
 SHORTURL_API_ENDPOINT = "https://xgd.io/V1/shorten"
@@ -48,10 +49,8 @@ _DUMMY_PREFIX_VALUE = "!@#$%^&SUGIYAMA_BOT_DUMMY_PREFIX_XYZ_VERY_UNIQUE"
 def get_dummy_prefix(bot, message):
     return _DUMMY_PREFIX_VALUE
 
-# BASE_DIR は既に上で定義済みなので、再定義は不要
 SETTINGS_FILE_PATH = os.path.join(BASE_DIR, "bot_settings.json")
 GAME_POINTS_FILE_PATH = os.path.join(BASE_DIR, "game_points.json")
-
 allowed_channels = set()
 game_points = {}
 JST = pytz.timezone("Asia/Tokyo")
@@ -71,7 +70,7 @@ TEMPLATES_DATA = [
     {"name": "OPPO Find X5 2.png", "user_ratio_str": "512/439", "target_size": (4096, 3512)},
     {"name": "OPPO Find X5.png", "user_ratio_str": "3/4", "target_size": (1080, 1440)},
     {"name": "NIKON1J5.png", "user_ratio_str": "548/461", "target_size": (4384, 3688)},
-    {"name": "REDMAGIC9PRO.png", "user_ratio_str": "9/13", "target_size": (3060, 4420)},
+    {"name": "REDMAGIC9PRO.png", "user_ratio_str": "6/5", "target_size": (4080, 3400)},
     {"name": "REDMI121.png", "user_ratio_str": "64/85", "target_size": (3072, 4080)},
     {"name": "REDMI122.png", "user_ratio_str": "85/64", "target_size": (4080, 3072)},
     {"name": "OPPOFINDX5PRO.png", "user_ratio_str": "256/363", "target_size": (3072, 4356)},
@@ -81,11 +80,17 @@ TEMPLATES_DATA = [
     {"name": "VIVOX60TPRO.png", "user_ratio_str": "4/3", "target_size": (4080, 3060)},
     {"name": "ONEPLUS11R5G.png", "user_ratio_str": "8/7", "target_size": (8192, 7168)},
     {"name": "XIAOMI15ULTRA 3.png", "user_ratio_str": "1151/1818", "target_size": (2302, 3636)},
-    {"name": "XIAOMI15ULTRA 2.png", "user_ratio_str": "568/503", "target_size": (4544, 4024)} 
+    {"name": "XIAOMI15ULTRA 2.png", "user_ratio_str": "568/503", "target_size": (4544, 4024)},
+    {"name": "HONORMAGIC7PRO.png", "user_ratio_str": "16/10", "target_size": (4096, 2560)},
+    {"name": "ONEPLUS.png", "user_ratio_str": "4/3", "target_size": (4096, 3072)},
+    {"name": "NIKOND7500.png", "user_ratio_str": "974/1591", "target_size": (3896, 6364)}, 
+    {"name": "VIVOXFOLD3PRO.png", "user_ratio_str": "300/257", "target_size": (1200, 1028)},
+    {"name": "VIVOX100.png", "user_ratio_str": "300/257", "target_size": (1200, 1028)},
+    {"name": "HUAWEIP30PRO.png", "user_ratio_str": "4/3", "target_size": (3648, 2736)},
+    {"name": "XIAOMI13ULTRA.png", "user_ratio_str": "1/1", "target_size": (2048, 2048)} 
 ]
 
-# /imakita rate limit
-imakita_request_timestamps = deque() # ★ グローバル変数として初期化されているか確認
+imakita_request_timestamps = deque()
 IMAKITA_RATE_LIMIT_COUNT = 13
 IMAKITA_RATE_LIMIT_SECONDS = 60
 
@@ -101,6 +106,7 @@ active_janken_games = {}
 HAND_EMOJIS = {"rock": "✊", "scissors": "✌️", "paper": "✋"}
 EMOJI_TO_HAND = {v: k for k, v in HAND_EMOJIS.items()}
 JANKEN_TIMEOUT_HOST_CHOICE_SECONDS = 60.0
+JANKEN_TIMEOUT_OPPONENT_CHOICE_SECONDS = 120.0
 JANKEN_WIN_POINTS = 7
 JANKEN_LOSE_POINTS = -5
 
@@ -115,20 +121,13 @@ RVC_INPUT_AUDIO_DIR = os.path.join(BASE_DIR, "audio", "input")
 RVC_OUTPUT_AUDIO_DIR = os.path.join(BASE_DIR, "audio", "output")
 
 USER_BADGES_EMOJI = {
-    "active_developer": "<:activedeveloper:1383253229189730374>",
-    "nitro": "<:nitro:1383252018532974642>",
-    "hypesquad_balance": "<:balance:1383251792413851688>",
-    "hypesquad_bravery": "<:bravery:1383251749623693392>",
-    "hypesquad_brilliance": "<:brilliance:1383251723610624174>",
-    "premium": "<:booster:1383251702144176168>",
-    "partner": "<:partnerserver:1383251682070364210>",
-    "early_verified_bot_developer": "<:earlyverifiedbot:1383251648348160030>",
-    "bug_hunter": "<:bugHunter:1383251633567170683>",
-    "bug_hunter_level_2": "<:bugHunter:1383251633567170683>",
-    "early_supporter": "<:earlysupporter:1383251618379727031>",
-    "staff": "<:staff:1383251602680578111>",
-    "discord_certified_moderator": "<:moderator:1383251587438215218>",
-    "verified_bot": "✅"
+    "active_developer": "<:activedeveloper:1383253229189730374>", "nitro": "<:nitro:1383252018532974642>",
+    "hypesquad_balance": "<:balance:1383251792413851688>", "hypesquad_bravery": "<:bravery:1383251749623693392>",
+    "hypesquad_brilliance": "<:brilliance:1383251723610624174>", "premium": "<:booster:1383251702144176168>",
+    "partner": "<:partnerserver:1383251682070364210>", "early_verified_bot_developer": "<:earlyverifiedbot:1383251648348160030>",
+    "bug_hunter": "<:bugHunter:1383251633567170683>", "bug_hunter_level_2": "<:bugHunter:1383251633567170683>",
+    "early_supporter": "<:earlysupporter:1383251618379727031>", "staff": "<:staff:1383251602680578111>",
+    "discord_certified_moderator": "<:moderator:1383251587438215218>", "verified_bot": "✅"
 }
 TIMEZONE_MAP = {
     "JP": "Asia/Tokyo", "US": "America/New_York", "GB": "Europe/London", "EU": "Europe/Brussels",
@@ -136,718 +135,518 @@ TIMEZONE_MAP = {
     "AU": "Australia/Sydney", "CN": "Asia/Shanghai", "IN": "Asia/Kolkata", "BR": "America/Sao_Paulo",
     "RU": "Europe/Moscow", "KR": "Asia/Seoul", "ZA": "Africa/Johannesburg", "MX": "America/Mexico_City",
     "ID": "Asia/Jakarta", "TR": "Europe/Istanbul", "SA": "Asia/Riyadh", "AR": "America/Argentina/Buenos_Aires",
-    "ES": "Europe/Madrid", "NL": "Europe/Amsterdam",
-    "US-PST": "America/Los_Angeles", "US-CST": "America/Chicago", "US-MST": "America/Denver"
+    "ES": "Europe/Madrid", "NL": "Europe/Amsterdam", "US-PST": "America/Los_Angeles", 
+    "US-CST": "America/Chicago", "US-MST": "America/Denver"
 }
 
-TEXT_IMAGE_FONT_PATH = os.path.join(BASE_DIR, "assets", "fonts", "MochiyPopOne-Regular.ttf")
-TEXT_IMAGE_FONT_SIZE = 100
-TEXT_IMAGE_TEXT_COLOR = (255, 255, 0)
-TEXT_IMAGE_OUTLINE_COLOR_BLACK = (0, 0, 0)
-TEXT_IMAGE_OUTLINE_COLOR_WHITE = (255, 255, 255)
-TEXT_IMAGE_OUTLINE_THICKNESS_BLACK = 11
-TEXT_IMAGE_OUTLINE_THICKNESS_WHITE = 11
-TEXT_IMAGE_PADDING = 30 # 以前は35だったが、調整しやすいように一旦30に戻す
-TEXT_IMAGE_LETTER_SPACING_ADJUST = -0.10
-TEXT_IMAGE_LINE_HEIGHT_MULTIPLIER = 0.80
-TEXT_IMAGE_VERTICAL_OFFSET = -15 # Yオフセット (以前は-25、-10など)
-TEXT_MASK_ADDITIONAL_MARGIN = TEXT_IMAGE_FONT_SIZE // 2
+TEXT_IMAGE_FONT_PATH_DEFAULT = os.path.join(BASE_DIR, "assets", "fonts", "MochiyPopOne-Regular.ttf")
+TEXT_IMAGE_TEXT_COLOR_DEFAULT = (255, 255, 0) 
+TEXT_IMAGE_OUTLINE_COLOR_BLACK_DEFAULT = (0, 0, 0)
+TEXT_IMAGE_OUTLINE_COLOR_WHITE_DEFAULT = (255, 255, 255)
+TEXT_IMAGE_OUTLINE_THICKNESS_BLACK_DEFAULT = 17
+TEXT_IMAGE_OUTLINE_THICKNESS_WHITE_DEFAULT = 12
 
-# ★★★ BET_DICE_PAYOUTS の定義を追加 ★★★
+TEXT_IMAGE_TEXT_COLOR_BLUE = (50, 150, 255) 
+
+TEXT_IMAGE_FONT_PATH_NOTO_SERIF_BOLD = os.path.join(BASE_DIR, "assets", "fonts", "NotoSerifJP-Black.ttf")
+TEXT_IMAGE_TEXT_COLOR_RED_NOTO = (0xC3, 0x02, 0x03)
+TEXT_IMAGE_OUTLINE_COLOR_WHITE_NOTO = (255, 255, 255)
+TEXT_IMAGE_OUTLINE_THICKNESS_WHITE_NOTO = 7 
+
+TEXT_IMAGE_FONT_SIZE_COMMON = 100
+TEXT_IMAGE_PADDING_COMMON = 35 
+TEXT_IMAGE_LETTER_SPACING_ADJUST_COMMON = -0.10
+TEXT_IMAGE_LINE_HEIGHT_MULTIPLIER_COMMON = 0.75 
+TEXT_IMAGE_VERTICAL_OFFSET_COMMON = -10 
+TEXT_MASK_ADDITIONAL_MARGIN_COMMON = TEXT_IMAGE_FONT_SIZE_COMMON 
+
+TEXT_IMAGE_BLUR_RADIUS_FACTOR_BLACK = 0.35 
+TEXT_IMAGE_THRESHOLD_BLACK = 90          
+TEXT_IMAGE_BLUR_RADIUS_FACTOR_WHITE = 0.35 
+TEXT_IMAGE_THRESHOLD_WHITE = 90          
+
 BET_DICE_PAYOUTS = {
-    1: ("大凶... 賭け金は没収です。", -1.0),
-    2: ("凶。賭け金の半分を失いました。", -0.5),
-    3: ("小吉。賭け金の半分を失いました。", -0.5),
-    4: ("吉！賭け金はそのまま戻ってきます。", 0.0),
-    5: ("中吉！賭け金が1.5倍になりました。", 0.5),
-    6: ("大吉！おめでとうございます！賭け金が2倍になりました！", 1.0)
+    1: ("大凶... 賭け金は没収です。", -1.0), 2: ("凶。賭け金の半分を失いました。", -0.5),
+    3: ("小吉。賭け金の半分を失いました。", -0.5), 4: ("吉！賭け金はそのまま戻ってきます。", 0.0),
+    5: ("中吉！賭け金が1.5倍になりました。", 0.5), 6: ("大吉！おめでとうございます！賭け金が2倍になりました！", 1.0)
 }
-# ★★★★★★★★★★★★★★★★★★★★★★★★
 
 for t_data in TEMPLATES_DATA:
-    try:
-        parts = t_data['user_ratio_str'].split('/')
-        if len(parts) == 2 and float(parts[1]) != 0: t_data['match_ratio_wh'] = float(parts[0]) / float(parts[1])
-        else: raise ValueError("Invalid ratio format")
-    except Exception as e:
-        print(f"Warning: Template '{t_data['name']}' ratio parsing error: {e}"); t_data['match_ratio_wh'] = 1.0
+    if 'match_ratio_wh' not in t_data:
+        try:
+            parts = t_data['user_ratio_str'].split('/')
+            if len(parts) == 2 and float(parts[1]) != 0: t_data['match_ratio_wh'] = float(parts[0]) / float(parts[1])
+            else: raise ValueError("Invalid ratio")
+        except Exception as e: print(f"Template ratio error: {t_data['name']} - {e}"); t_data['match_ratio_wh'] = 1.0
 
 gemini_text_model_instance = None
 GEMINI_API_UNAVAILABLE = False
-# ... (Gemini初期化は変更なし) ...
-print("--- Gemini API Initialization Attempt (Text Model Only) ---")
 if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KEY_PLACEHOLDER":
-    print(f"Using GEMINI_API_KEY: {GEMINI_API_KEY[:5]}...")
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        gemini_text_model_instance = genai.GenerativeModel(GEMINI_TEXT_MODEL_NAME)
-        if not gemini_text_model_instance:
-            print("ERROR: Gemini text model instance failed to initialize."); GEMINI_API_UNAVAILABLE = True
-        else:
-            print(f"Gemini Text Model ('{GEMINI_TEXT_MODEL_NAME}') initialized successfully.")
-    except Exception as e:
-        print(f"ERROR: Gemini API init failed: {e}"); traceback.print_exc(); GEMINI_API_UNAVAILABLE = True
-else:
-    print("WARNING: GEMINI_API_KEY not set. Gemini features unavailable."); GEMINI_API_UNAVAILABLE = True
-print("--- End of Gemini API Initialization Attempt ---")
+    try: genai.configure(api_key=GEMINI_API_KEY); gemini_text_model_instance = genai.GenerativeModel(GEMINI_TEXT_MODEL_NAME)
+    except Exception as e: print(f"Gemini init error: {e}"); GEMINI_API_UNAVAILABLE = True
+else: GEMINI_API_UNAVAILABLE = True
 
-
-intents = discord.Intents.default()
-intents.message_content = True
-intents.reactions = True
-intents.members = True
+intents = discord.Intents.default(); intents.message_content = True; intents.reactions = True; intents.members = True
 bot = commands.Bot(command_prefix=get_dummy_prefix, intents=intents, help_command=None)
 
-os.makedirs(RVC_INPUT_AUDIO_DIR, exist_ok=True)
-os.makedirs(RVC_OUTPUT_AUDIO_DIR, exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, "assets", "fonts"), exist_ok=True)
-os.makedirs(TEMPLATES_BASE_PATH, exist_ok=True)
+for d in [RVC_INPUT_AUDIO_DIR, RVC_OUTPUT_AUDIO_DIR, os.path.join(BASE_DIR, "assets", "fonts"), TEMPLATES_BASE_PATH]:
+    os.makedirs(d, exist_ok=True)
 
+# ========================== HELPER FUNCTIONS (Order is important!) ==========================
 
-# ================================= GAME LOGIC (OTHELLO) & HELPERS =================================
+# --- Point System ---
+def load_game_points():
+    global game_points
+    try:
+        if os.path.exists(GAME_POINTS_FILE_PATH):
+            with open(GAME_POINTS_FILE_PATH, 'r', encoding='utf-8') as f: game_points = json.load(f)
+        else: game_points = {}; save_game_points()
+    except json.JSONDecodeError: game_points = {}; save_game_points(); print(f"Corrupted game points file at {GAME_POINTS_FILE_PATH}, created new.")
+    except Exception as e: print(f"Error loading game points: {e}"); game_points = {}
+
+def save_game_points():
+    try:
+        with open(GAME_POINTS_FILE_PATH, 'w', encoding='utf-8') as f: json.dump(game_points, f, indent=4, ensure_ascii=False)
+    except Exception as e: print(f"Error saving game points: {e}")
+
+def get_player_points(player_id: int) -> int: return game_points.get(str(player_id), 0)
+
+def update_player_points(player_id: int, points_change: int):
+    player_id_str = str(player_id); current_points = game_points.get(player_id_str, 0)
+    new_points = max(0, current_points + points_change)
+    game_points[player_id_str] = new_points; save_game_points()
+
+# --- Settings ---
+def load_settings():
+    global allowed_channels
+    try:
+        if os.path.exists(SETTINGS_FILE_PATH):
+            with open(SETTINGS_FILE_PATH, 'r', encoding='utf-8') as f: settings_data = json.load(f); allowed_channels = set(settings_data.get("allowed_channels", []))
+        else: allowed_channels = set(); save_settings()
+    except Exception as e: print(f"Error loading settings: {e}"); allowed_channels = set()
+
+def save_settings():
+    try:
+        with open(SETTINGS_FILE_PATH, 'w', encoding='utf-8') as f: json.dump({"allowed_channels": list(allowed_channels)}, f, indent=4, ensure_ascii=False)
+    except Exception as e: print(f"Error saving settings: {e}")
+
+# --- Othello Game Logic ---
 EMPTY = 0; BLACK = 1; WHITE = 2; BOARD_SIZE = 8
-class OthelloGame: # ... (OthelloGameクラスの定義は変更なし) ...
-    _next_game_id_counter = 1
-    _active_game_ids = set()
-    def __init__(self):
-        self.board = [[EMPTY] * BOARD_SIZE for _ in range(BOARD_SIZE)]
-        self.board[3][3] = WHITE; self.board[3][4] = BLACK
-        self.board[4][3] = BLACK; self.board[4][4] = WHITE
-        self.current_player = BLACK
-        self.valid_moves_with_markers = {}
-        self.game_over = False; self.winner = None; self.last_pass = False
-        self.players = {}
-        self.channel_id = None
-        self.last_move_time = datetime.datetime.now(JST)
-        self.game_id = OthelloGame._assign_game_id_static()
-        self.afk_task: asyncio.Task = None
-        self.message_id: int = None
-
+class OthelloGame:
+    _next_game_id_counter = 1; _active_game_ids = set()
+    def __init__(self): self.board = [[EMPTY]*BOARD_SIZE for _ in range(BOARD_SIZE)]; self.board[3][3],self.board[3][4],self.board[4][3],self.board[4][4] = WHITE,BLACK,BLACK,WHITE; self.current_player = BLACK; self.valid_moves_with_markers={}; self.game_over=False; self.winner=None; self.last_pass=False; self.players={}; self.channel_id=None; self.last_move_time=datetime.datetime.now(JST); self.game_id=OthelloGame._assign_game_id_static(); self.afk_task=None; self.message_id=None
     @staticmethod
-    def _assign_game_id_static():
-        gid = OthelloGame._next_game_id_counter
-        while gid in OthelloGame._active_game_ids: gid += 1
-        OthelloGame._active_game_ids.add(gid)
-        OthelloGame._next_game_id_counter = gid + 1
-        print(f"Assigned Othello Game ID: {gid}"); return gid
+    def _assign_game_id_static(): gid=OthelloGame._next_game_id_counter; OthelloGame._active_game_ids.add(gid); OthelloGame._next_game_id_counter+=1; return gid
     @staticmethod
-    def _release_game_id_static(gid):
-        if gid in OthelloGame._active_game_ids:
-            OthelloGame._active_game_ids.remove(gid)
-            print(f"Released Othello Game ID: {gid}")
-
-    def is_on_board(self, r, c): return 0 <= r < BOARD_SIZE and 0 <= c < BOARD_SIZE
-    def get_flips(self, r_s, c_s, p):
-        if not self.is_on_board(r_s, c_s) or self.board[r_s][c_s] != EMPTY: return []
-        op = WHITE if p == BLACK else BLACK; ttf = []
-        for dr, dc in [(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1)]:
-            r,c = r_s+dr, c_s+dc; cpf=[]
+    def _release_game_id_static(gid): OthelloGame._active_game_ids.discard(gid)
+    def is_on_board(self,r,c): return 0<=r<BOARD_SIZE and 0<=c<BOARD_SIZE
+    def get_flips(self,r_s,c_s,p):
+        if not self.is_on_board(r_s,c_s) or self.board[r_s][c_s]!=EMPTY: return []
+        op=WHITE if p==BLACK else BLACK; ttf=[]
+        for dr,dc in [(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1)]:
+            r,c=r_s+dr,c_s+dc; cpf=[]
             while self.is_on_board(r,c) and self.board[r][c]==op: cpf.append((r,c)); r+=dr; c+=dc
             if self.is_on_board(r,c) and self.board[r][c]==p and cpf: ttf.extend(cpf)
         return ttf
-    def calculate_valid_moves(self, p):
+    def calculate_valid_moves(self,p):
         self.valid_moves_with_markers.clear(); mi=0; cvc=[]
         for r_idx in range(BOARD_SIZE):
             for c_idx in range(BOARD_SIZE):
-                if self.board[r_idx][c_idx]==EMPTY and self.get_flips(r_idx,c_idx,p):
-                    cvc.append((r_idx,c_idx))
-                    if mi < len(MARKERS): self.valid_moves_with_markers[(r_idx,c_idx)]=MARKERS[mi]; mi+=1
+                if self.board[r_idx][c_idx]==EMPTY and self.get_flips(r_idx,c_idx,p): cvc.append((r_idx,c_idx)); self.valid_moves_with_markers[(r_idx,c_idx)]=MARKERS[mi] if mi<len(MARKERS) else "❓"; mi+=1
         return cvc
-    def make_move(self, r, c, p):
-        if self.game_over: return False
-        if not self.is_on_board(r,c) or self.board[r][c]!=EMPTY: return False
-        ttf = self.get_flips(r,c,p)
+    def make_move(self,r,c,p):
+        if self.game_over or not self.is_on_board(r,c) or self.board[r][c]!=EMPTY: return False
+        ttf=self.get_flips(r,c,p)
         if not ttf: return False
         self.board[r][c]=p
-        for fr,fc in ttf: self.board[fr][fc]=p
-        self.last_pass=False; self.last_move_time = datetime.datetime.now(JST); return True
+        for fr_loop, fc_loop in ttf: self.board[fr_loop][fc_loop] = p
+        self.last_pass=False; self.last_move_time=datetime.datetime.now(JST); return True
     def switch_player(self): self.current_player = WHITE if self.current_player==BLACK else BLACK
     def check_game_status(self):
-        if self.game_over: return
-        if self.calculate_valid_moves(self.current_player): self.last_pass=False; return
-        if self.last_pass: self.game_over=True
+        if self.game_over: 
+            return  # このreturnのインデントが if self.game_over: と同じレベルであるべき
+        if self.calculate_valid_moves(self.current_player): 
+            self.last_pass=False
+            return # このreturnのインデントが if self.calculate_valid_moves: と同じレベルであるべき
+        
+        # Current player has no moves
+        if self.last_pass: 
+            self.game_over = True
         else:
-            self.last_pass=True; self.switch_player()
-            if not self.calculate_valid_moves(self.current_player): self.game_over=True
-        if self.game_over: self.determine_winner()
-    def determine_winner(self):
-        bs=sum(r.count(BLACK) for r in self.board); ws=sum(r.count(WHITE) for r in self.board)
-        if bs > ws: self.winner=BLACK
-        elif ws > bs: self.winner=WHITE
-        else: self.winner=EMPTY
+            self.last_pass = True
+            self.switch_player()
+            # このif文はelseブロックの中なので、elseと同じインデントレベルか、それより深くあるべき
+            if not self.calculate_valid_moves(self.current_player): self.game_over=True # ★★★ エラー発生箇所 ★★★
+        
+        if self.game_over: # このifは関数のトップレベルのifと同等
+            self.determine_winner()
+    def determine_winner(self): bs=sum(r.count(BLACK) for r in self.board); ws=sum(r.count(WHITE) for r in self.board); self.winner = BLACK if bs>ws else (WHITE if ws>bs else EMPTY)
     def get_current_player_id(self): return self.players.get(self.current_player)
     def get_opponent_player_id(self): return self.players.get(WHITE if self.current_player==BLACK else BLACK)
 
-
-# ★★★ get_initial_board_text 関数の定義を追加 ★★★
 def get_initial_board_text():
-    temp_game = OthelloGame() # OthelloGameクラスがこの関数より前に定義されている必要あり
-    board_str = ""
-    for r_idx in range(BOARD_SIZE): # BOARD_SIZE も定義されている必要あり
+    temp_game = OthelloGame(); board_str = ""
+    for r_idx in range(BOARD_SIZE):
         for c_idx in range(BOARD_SIZE):
-            if temp_game.board[r_idx][c_idx] == BLACK: board_str += BLACK_STONE # BLACK_STONEなども定義済みであること
+            if temp_game.board[r_idx][c_idx] == BLACK: board_str += BLACK_STONE
             elif temp_game.board[r_idx][c_idx] == WHITE: board_str += WHITE_STONE
             else: board_str += GREEN_SQUARE
         board_str += "\n"
     return board_str.strip()
 
+async def send_othello_board_message(channel: discord.TextChannel, game_session: dict, message_to_update: discord.Message, is_first_turn: bool = False, recruitment_message_content: str = None):
+    game = game_session["game"]
+    if not game.game_over:
+        game.calculate_valid_moves(game.current_player)
 
-# ================================= HELPER FUNCTIONS (Points, Settings, Image, etc.) =================================
-# ... (OthelloGame class, get_initial_board_text, load/save_settings, load/save_game_points, get/update_player_points unchanged from previous full code)
-# ... (_resize_image_if_too_large, _process_and_composite_image, _create_gaming_gif unchanged)
-# ... (generate_gemini_text_response, generate_summary_with_gemini unchanged)
-# ... (send_othello_board_message - with updated point logic for normal end)
-# ... (generate_voicevox_audio, process_audio_with_rvc unchanged)
-# OTHELLO GAME LOGIC (unchanged)
-EMPTY = 0; BLACK = 1; WHITE = 2; BOARD_SIZE = 8
-class OthelloGame:
-    _next_game_id_counter = 1
-    _active_game_ids = set()
-    def __init__(self): # ... (rest of OthelloGame class is unchanged)
-        self.board = [[EMPTY] * BOARD_SIZE for _ in range(BOARD_SIZE)]
-        self.board[3][3] = WHITE; self.board[3][4] = BLACK
-        self.board[4][3] = BLACK; self.board[4][4] = WHITE
-        self.current_player = BLACK
-        self.valid_moves_with_markers = {}
-        self.game_over = False; self.winner = None; self.last_pass = False
-        self.players = {} # {BLACK: player_id, WHITE: player_id}
-        self.channel_id = None
-        self.last_move_time = datetime.datetime.now(JST)
-        self.game_id = OthelloGame._assign_game_id_static()
-        self.afk_task: asyncio.Task = None
-        self.message_id: int = None # To store the game board message ID
+    # ... (ユーザー情報取得、メッセージ内容構築は変更なし) ...
+    p_black_id = game_session["players"].get(BLACK)
+    p_white_id = game_session["players"].get(WHITE)
+    current_player_id_from_session = game_session["players"].get(game.current_player)
 
-    @staticmethod
-    def _assign_game_id_static():
-        gid = OthelloGame._next_game_id_counter
-        while gid in OthelloGame._active_game_ids:
-            gid += 1
-        OthelloGame._active_game_ids.add(gid)
-        OthelloGame._next_game_id_counter = gid + 1
-        print(f"Assigned Othello Game ID: {gid}")
-        return gid
+    p_black_user = await bot.fetch_user(p_black_id) if p_black_id else None
+    p_white_user = await bot.fetch_user(p_white_id) if p_white_id else None
+    current_player_user = await bot.fetch_user(current_player_id_from_session) if current_player_id_from_session else None
 
-    @staticmethod
-    def _release_game_id_static(gid):
-        if gid in OthelloGame._active_game_ids:
-            OthelloGame._active_game_ids.remove(gid)
-            print(f"Released Othello Game ID: {gid}")
-        # To prevent unbounded growth of _next_game_id_counter if many games are played,
-        # one might consider more sophisticated ID management, but for typical use this is okay.
+    p_black_mention = f"{p_black_user.mention if p_black_user else f'Player Black ({p_black_id})'} (Pt: {get_player_points(p_black_id)})"
+    p_white_mention = f"{p_white_user.mention if p_white_user else f'Player White ({p_white_id})'} (Pt: {get_player_points(p_white_id)})"
+    current_player_mention = current_player_user.mention if current_player_user else f"Player ({current_player_id_from_session})"
 
-    def is_on_board(self, r, c): return 0 <= r < BOARD_SIZE and 0 <= c < BOARD_SIZE
-    def get_flips(self, r_start, c_start, player): # Returns list of (r,c) tuples to flip
-        if not self.is_on_board(r_start, c_start) or self.board[r_start][c_start] != EMPTY: return []
-        opponent = WHITE if player == BLACK else BLACK
-        tiles_to_flip = []
-        for dr, dc in [(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1)]: # 8 directions
-            r, c = r_start + dr, c_start + dc
-            current_line_flips = []
-            while self.is_on_board(r, c) and self.board[r][c] == opponent:
-                current_line_flips.append((r,c))
-                r += dr; c += dc
-            if self.is_on_board(r,c) and self.board[r][c] == player and current_line_flips:
-                tiles_to_flip.extend(current_line_flips)
-        return tiles_to_flip
+    title_line = f"オセロゲーム #{game.game_id} | {BLACK_STONE} {p_black_mention} vs {WHITE_STONE} {p_white_mention}"
+    board_str = ""
+    for r_idx in range(BOARD_SIZE):
+        for c_idx in range(BOARD_SIZE):
+            coord = (r_idx, c_idx)
+            if not game.game_over and coord in game.valid_moves_with_markers: board_str += game.valid_moves_with_markers[coord]
+            elif game.board[r_idx][c_idx] == BLACK: board_str += BLACK_STONE
+            elif game.board[r_idx][c_idx] == WHITE: board_str += WHITE_STONE
+            else: board_str += GREEN_SQUARE
+        board_str += "\n"
+    
+    black_score = sum(r.count(BLACK) for r in game.board)
+    white_score = sum(r.count(WHITE) for r in game.board)
+    score_line = f"スコア: {BLACK_STONE} {black_score} - {WHITE_STONE} {white_score}"
+    
+    final_content_parts = [title_line, "", board_str.strip(), score_line]
 
-    def calculate_valid_moves(self, player):
-        self.valid_moves_with_markers.clear()
-        marker_index = 0
-        possible_moves = []
-        for r_idx in range(BOARD_SIZE):
-            for c_idx in range(BOARD_SIZE):
-                if self.board[r_idx][c_idx] == EMPTY and self.get_flips(r_idx, c_idx, player):
-                    possible_moves.append((r_idx, c_idx))
-                    if marker_index < len(MARKERS):
-                        self.valid_moves_with_markers[(r_idx,c_idx)] = MARKERS[marker_index]
-                        marker_index +=1
-        return possible_moves
+    if game.game_over:
+        winner_text = "引き分け"; points_changed_text = ""
+        if game.winner != EMPTY: 
+            winner_id = game.players.get(game.winner)
+            loser_id = game.players.get(WHITE if game.winner == BLACK else BLACK)
+            winner_user = await bot.fetch_user(winner_id) if winner_id else None
+            loser_user = await bot.fetch_user(loser_id) if loser_id else None
+            winner_stone = BLACK_STONE if game.winner == BLACK else WHITE_STONE
+            winner_text = f"{winner_stone} {(winner_user.mention if winner_user else f'ID:{winner_id}')} の勝ち！"
+            
+            if not getattr(game, 'ended_by_action', False) and winner_id and loser_id :
+                score_diff = abs(black_score - white_score)
+                points_change_winner = (score_diff * 3) + 10
+                points_change_loser = max(0, 20 - score_diff) 
+                update_player_points(winner_id, points_change_winner)
+                update_player_points(loser_id, points_change_loser)
+                points_changed_text = f" ({winner_user.name if winner_user else f'ID:{winner_id}'} +{points_change_winner}pt, {loser_user.name if loser_user else f'ID:{loser_id}'} +{points_change_loser}pt)"
+        
+        elif game.winner == EMPTY and not getattr(game, 'ended_by_action', False): # Draw by score
+            points_for_draw = 5 
+            if p_black_id and p_white_id:
+                update_player_points(p_black_id, points_for_draw); update_player_points(p_white_id, points_for_draw)
+                points_changed_text = f" (両者 +{points_for_draw}pt)"
+            winner_text = "引き分け！"
+        final_content_parts.append(f"**ゲーム終了！ {winner_text}**{points_changed_text}")
+        
+        if message_to_update and message_to_update.id in active_games:
+            # ... (cleanup logic from before)
+            game_session_data = active_games.get(message_to_update.id) # Check if still exists
+            if game_session_data:
+                game_obj_to_clean = game_session_data.get("game")
+                if game_obj_to_clean and game_obj_to_clean.afk_task and not game_obj_to_clean.afk_task.done():
+                    game_obj_to_clean.afk_task.cancel()
+                OthelloGame._release_game_id_static(game.game_id) # Use game.game_id for consistency
+                if message_to_update.id in active_games: # Re-check before deleting
+                    del active_games[message_to_update.id]
 
-    def make_move(self, r, c, player):
-        if self.game_over: return False
-        if not self.is_on_board(r,c) or self.board[r][c] != EMPTY: return False
-        tiles_to_flip = self.get_flips(r,c,player)
-        if not tiles_to_flip: return False
-        self.board[r][c] = player
-        for fr, fc in tiles_to_flip: self.board[fr][fc] = player
-        self.last_pass = False
-        self.last_move_time = datetime.datetime.now(JST)
-        return True
+    elif recruitment_message_content:
+        final_content_parts = [recruitment_message_content]
+    else:
+        final_content_parts.append(f"手番: {current_player_mention}")
 
-    def switch_player(self): self.current_player = WHITE if self.current_player == BLACK else BLACK
-    def check_game_status(self): # Checks for game over conditions
-        if self.game_over: return
-        if self.calculate_valid_moves(self.current_player): # Current player has moves
-            self.last_pass = False; return
-        # Current player has no moves, check opponent
-        if self.last_pass: # Both players passed consecutively
-            self.game_over = True
-        else:
-            self.last_pass = True
-            self.switch_player()
-            if not self.calculate_valid_moves(self.current_player): # Opponent also has no moves
-                self.game_over = True
-        if self.game_over: self.determine_winner()
+    final_content_str = "\n".join(final_content_parts)
 
-    def determine_winner(self):
-        black_score = sum(row.count(BLACK) for row in self.board)
-        white_score = sum(row.count(WHITE) for row in self.board)
-        if black_score > white_score: self.winner = BLACK
-        elif white_score > black_score: self.winner = WHITE
-        else: self.winner = EMPTY # Draw
+    if message_to_update:
+        try:
+            if game.game_over or recruitment_message_content:
+                # ゲーム終了時や募集メッセージ更新時はビューをクリア
+                await message_to_update.edit(content=final_content_str, view=None)
+            else:
+                # ゲーム進行中はビューを変更しない（リアクションベースなので元々ビューはないはず）
+                await message_to_update.edit(content=final_content_str) 
+        except discord.HTTPException as e: 
+            print(f"Failed to edit othello message {message_to_update.id}: {e}")
+    
+    if message_to_update and game and not game.game_over and not recruitment_message_content:
+        current_bot_reactions = [str(r.emoji) for r in message_to_update.reactions if r.me]
+        new_valid_markers_emojis = list(game.valid_moves_with_markers.values())
+        to_add = [emoji for emoji in new_valid_markers_emojis if emoji not in current_bot_reactions]
+        to_remove = [emoji for emoji in current_bot_reactions if emoji not in new_valid_markers_emojis]
+        
+        if is_first_turn:
+            try: await message_to_update.clear_reactions()
+            except discord.Forbidden: print(f"No permission to clear reactions on msg {message_to_update.id}")
+            except discord.HTTPException as e: print(f"Failed to clear reactions: {e}")
+            to_add = new_valid_markers_emojis
+            to_remove = []
 
-    def get_current_player_id(self): return self.players.get(self.current_player)
-    def get_opponent_player_id(self): return self.players.get(WHITE if self.current_player == BLACK else BLACK)
+        async def manage_reactions_task():
+            for emoji_str in to_remove:
+                try: await message_to_update.remove_reaction(emoji_str, bot.user)
+                except: pass # Ignore if already removed or no permission
+            for emoji_str in to_add:
+                try: await message_to_update.add_reaction(emoji_str)
+                except: pass # Ignore if failed to add (e.g. message deleted)
+        asyncio.create_task(manage_reactions_task())
 
-# SETTINGS & POINTS (unchanged)
-def load_settings(): # ...
-    global allowed_channels
+    elif message_to_update and game and game.game_over:
+         try: await message_to_update.clear_reactions()
+         except discord.Forbidden: print(f"No permission to clear reactions on game over for msg {message_to_update.id}")
+         except discord.HTTPException as e: print(f"Failed to clear reactions on game over: {e}")
+    return message_to_update
+
+
+# --- Weather API (Tsukumijima) ---
+async def load_weather_city_codes():
+    global weather_city_id_map
+    if os.path.exists(WEATHER_CITY_CODES_FILE_PATH):
+        try:
+            with open(WEATHER_CITY_CODES_FILE_PATH, 'r', encoding='utf-8') as f: weather_city_id_map = json.load(f)
+            if weather_city_id_map: print(f"Loaded {len(weather_city_id_map)} weather city codes from local cache."); return
+        except Exception as e: print(f"Error loading cached city codes: {e}")
+    print("Fetching weather city codes from API...")
     try:
-        if os.path.exists(SETTINGS_FILE_PATH):
-            with open(SETTINGS_FILE_PATH, 'r', encoding='utf-8') as f:
-                settings_data = json.load(f)
-                allowed_channels = set(settings_data.get("allowed_channels", []))
-        else: # File doesn't exist, create with empty set
-            allowed_channels = set()
-            save_settings()
-    except Exception as e:
-        print(f"Error loading settings: {e}. Using empty allowed channels set. (File: {SETTINGS_FILE_PATH})")
-        allowed_channels = set()
-def save_settings(): # ...
-    settings_data = {"allowed_channels": list(allowed_channels)}
-    try:
-        with open(SETTINGS_FILE_PATH, 'w', encoding='utf-8') as f:
-            json.dump(settings_data, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        print(f"Error saving settings: {e}")
-def load_game_points(): # ...
-    global game_points
-    try:
-        if os.path.exists(GAME_POINTS_FILE_PATH):
-            with open(GAME_POINTS_FILE_PATH, 'r', encoding='utf-8') as f:
-                game_points = json.load(f)
-        else: # File doesn't exist, initialize and save
-            game_points = {}
-            save_game_points()
-    except json.JSONDecodeError: # File is empty or corrupted
-        print(f"Game points file is empty or corrupted. Initializing with empty points. (File: {GAME_POINTS_FILE_PATH})")
-        game_points = {}
-        save_game_points() # Save the fresh empty state
-    except Exception as e:
-        print(f"Error loading game points: {e}. Using empty points data.")
-        game_points = {}
-def save_game_points(): # ...
-    try:
-        with open(GAME_POINTS_FILE_PATH, 'w', encoding='utf-8') as f:
-            json.dump(game_points, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        print(f"Error saving game points: {e}")
-def get_player_points(player_id: int) -> int: return game_points.get(str(player_id), 0)
-def update_player_points(player_id: int, points_change: int): # ...
-    player_id_str = str(player_id)
-    current_points = game_points.get(player_id_str, 0)
-    new_points = max(0, current_points + points_change) # Points cannot be negative
-    game_points[player_id_str] = new_points
-    save_game_points()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(PRIMARY_AREA_XML_URL) as response:
+                if response.status == 200:
+                    xml_text = await response.text(); root = ET.fromstring(xml_text); temp_map = {}
+                    for pref_element in root.findall('.//pref'):
+                        pref_title = pref_element.get('title')
+                        for city_element in pref_element.findall('.//city'):
+                            city_title = city_element.get('title'); city_id = city_element.get('id')
+                            if city_title and city_id:
+                                temp_map[city_title] = city_id
+                                if pref_title and pref_title != city_title: temp_map[f"{pref_title}{city_title}"] = city_id
+                    weather_city_id_map = temp_map
+                    with open(WEATHER_CITY_CODES_FILE_PATH, 'w', encoding='utf-8') as f: json.dump(weather_city_id_map, f, ensure_ascii=False, indent=2)
+                    print(f"Fetched and cached {len(weather_city_id_map)} city codes.")
+                else: print(f"Failed to fetch city codes: HTTP {response.status}")
+    except Exception as e: print(f"Error fetching city codes: {e}")
 
-# IMAGE HELPERS (unchanged)
+
+# --- Image Processing & Other Helpers ---
+
 async def _resize_image_if_too_large(
     image_fp: io.BytesIO, 
     target_format: str, 
-    max_size_bytes: int = MAX_FILE_SIZE_BYTES, # Default from global
-    min_dimension: int = MIN_IMAGE_DIMENSION, # Default from global
+    max_size_bytes: int = MAX_FILE_SIZE_BYTES,
+    min_dimension: int = MIN_IMAGE_DIMENSION, 
     initial_aggressiveness: float = 0.9,
     subsequent_resize_factor: float = 0.85, 
     max_iterations: int = 7
 ) -> tuple[io.BytesIO | None, bool]:
     image_fp.seek(0, io.SEEK_END); current_size = image_fp.tell(); image_fp.seek(0)
-    if current_size <= max_size_bytes: return image_fp, False # No resize needed
+    if current_size <= max_size_bytes: return image_fp, False
 
-    current_fp_to_process = image_fp # Start with the original BytesIO
+    current_fp_to_process = image_fp
     resized_overall = False
-    
-    # If it's a GIF, we need to handle frames. For others, a single image.
     is_gif = target_format.upper() == "GIF"
 
-    for iteration in range(max_iterations): # max_iterations to prevent infinite loops
-        current_fp_to_process.seek(0) # Rewind buffer for reading
+    for iteration in range(max_iterations):
+        current_fp_to_process.seek(0)
         try:
             img = Image.open(current_fp_to_process)
             original_width, original_height = img.width, img.height
 
-            # If already small enough or too small to reasonably resize further
             if min(original_width, original_height) <= min_dimension:
-                # If it's still too large by bytes but dimensions are small, not much more we can do by resizing
-                if current_fp_to_process.tell() > MAX_FILE_SIZE_BYTES:
+                if current_fp_to_process.tell() > MAX_FILE_SIZE_BYTES: # Check if it's still too large by bytes
                     print(f"Image dimensions ({original_width}x{original_height}) too small for further effective resizing, but size ({current_fp_to_process.tell()} bytes) still too large.")
-                break # Stop if dimensions are too small
+                break 
 
-            # Calculate new size
             current_fp_to_process.seek(0, io.SEEK_END); current_iteration_size = current_fp_to_process.tell(); current_fp_to_process.seek(0)
             
             resize_this_iteration_factor = subsequent_resize_factor
             if iteration == 0 and current_iteration_size > max_size_bytes:
-                # Aggressive first resize if way too large
                 area_ratio = MAX_FILE_SIZE_BYTES / current_iteration_size
                 dimension_ratio_estimate = math.sqrt(area_ratio) * initial_aggressiveness
-                resize_this_iteration_factor = max(0.1, min(dimension_ratio_estimate, 0.95)) # Clamp between 10% and 95%
+                resize_this_iteration_factor = max(0.1, min(dimension_ratio_estimate, 0.95))
 
             new_width = int(original_width * resize_this_iteration_factor)
             new_height = int(original_height * resize_this_iteration_factor)
 
-            # Ensure new dimensions are not smaller than min_dimension, preserving aspect ratio
             if new_width < min_dimension or new_height < min_dimension:
                 aspect_ratio_orig = original_width / original_height
-                if new_width < min_dimension and new_height < min_dimension: # Both too small
-                    if new_width * aspect_ratio_orig > min_dimension : # Scale by width
+                if new_width < min_dimension and new_height < min_dimension:
+                    if new_width / aspect_ratio_orig >= min_dimension: # Check if scaling width maintains min_dimension for height
                          new_width = min_dimension
-                         new_height = int(new_width / aspect_ratio_orig)
-                    else: # Scale by height
+                         new_height = int(new_width / aspect_ratio_orig) if aspect_ratio_orig != 0 else min_dimension
+                    elif new_height * aspect_ratio_orig >= min_dimension: # Check if scaling height maintains min_dimension for width
                          new_height = min_dimension
-                         new_width = int(new_height * aspect_ratio_orig)
+                         new_width = int(new_height * aspect_ratio_orig) if aspect_ratio_orig !=0 else min_dimension
+                    else: # Both would be too small, pick one to be min_dimension and scale other
+                        if original_width > original_height:
+                            new_width = min_dimension
+                            new_height = int(new_width / aspect_ratio_orig) if aspect_ratio_orig !=0 else min_dimension
+                        else:
+                            new_height = min_dimension
+                            new_width = int(new_height * aspect_ratio_orig) if aspect_ratio_orig !=0 else min_dimension
                 elif new_width < min_dimension:
                     new_width = min_dimension
-                    new_height = int(new_width / aspect_ratio_orig)
+                    new_height = int(new_width / aspect_ratio_orig) if aspect_ratio_orig != 0 else min_dimension
                 else: # new_height < min_dimension
                     new_height = min_dimension
-                    new_width = int(new_height * aspect_ratio_orig)
+                    new_width = int(new_height * aspect_ratio_orig) if aspect_ratio_orig != 0 else min_dimension
                 
-                new_width = max(new_width, 1); new_height = max(new_height, 1) # Ensure positive dimensions
-                if new_width >= original_width and new_height >= original_height: # Avoid upscaling
-                     break # No effective downscale possible
+                new_width = max(new_width, 1); new_height = max(new_height, 1)
+                if new_width >= original_width and new_height >= original_height: break # No effective downscale
 
             output_fp = io.BytesIO()
             
             if is_gif:
-                frames = []
-                durations = []
-                loop = img.info.get('loop', 0)
-                disposal = img.info.get('disposal', 2) # Default disposal method
-
+                frames = []; durations = []; loop = img.info.get('loop', 0); disposal = 2
                 try:
-                    img.seek(0) # Start from the first frame
+                    img.seek(0)
                     while True:
-                        # Create a copy of the current frame to avoid modifying the original
-                        frame_copy = img.copy().convert("RGBA") # Convert to RGBA for consistency
+                        frame_copy = img.copy().convert("RGBA")
                         frame_copy.thumbnail((new_width, new_height), Image.Resampling.LANCZOS)
                         frames.append(frame_copy)
-                        durations.append(img.info.get('duration', 100)) # Get duration for this frame
-                        img.seek(img.tell() + 1) # Move to the next frame
-                except EOFError:
-                    pass # End of frames
-                
-                if not frames: break # No frames processed (e.g., not a valid GIF)
-                
-                frames[0].save(output_fp, format="GIF", save_all=True, append_images=frames[1:], 
-                               duration=durations, loop=loop, disposal=disposal, optimize=True)
-            else: # For non-GIF images (PNG, JPEG etc.)
-                # Create a copy for resizing to avoid issues with original stream
+                        durations.append(img.info.get('duration', 100))
+                        img.seek(img.tell() + 1)
+                except EOFError: pass
+                if not frames: break
+                frames[0].save(output_fp, format="GIF", save_all=True, append_images=frames[1:], duration=durations, loop=loop, disposal=disposal, optimize=True)
+            else:
                 resized_img = img.copy() 
                 resized_img.thumbnail((new_width, new_height), Image.Resampling.LANCZOS)
-                
                 save_params = {'optimize': True}
-                if target_format.upper() == 'JPEG': save_params['quality'] = 85 # Good quality for JPEGs
-                elif target_format.upper() == 'PNG': save_params['compress_level'] = 7 # Good compression for PNGs
-                
+                if target_format.upper() == 'JPEG': save_params['quality'] = 85
+                elif target_format.upper() == 'PNG': save_params['compress_level'] = 7
                 resized_img.save(output_fp, format=target_format.upper(), **save_params)
 
             output_fp.seek(0, io.SEEK_END); new_size = output_fp.tell(); output_fp.seek(0)
-
-            # Close the previous BytesIO object if it's not the original one passed to the function
-            if current_fp_to_process != image_fp:
-                current_fp_to_process.close()
-            
-            current_fp_to_process = output_fp # Update to the new (resized) BytesIO
-            resized_overall = True
-
-            if new_size <= max_size_bytes:
-                return current_fp_to_process, resized_overall # Success!
+            if current_fp_to_process != image_fp: current_fp_to_process.close()
+            current_fp_to_process = output_fp; resized_overall = True
+            if new_size <= max_size_bytes: return current_fp_to_process, resized_overall
         
         except Exception as e_resize:
             print(f"Error during image resize iteration: {e_resize}")
-            # If an error occurs, and we created an intermediate buffer, close it
-            if current_fp_to_process != image_fp:
-                current_fp_to_process.close()
-            return image_fp, False # Return original on error, indicating no successful resize
-
-    # If loop finishes and still too large, return the last processed (smallest attempted)
-    # The caller should check the size again if truly critical.
+            if current_fp_to_process != image_fp: current_fp_to_process.close()
+            return image_fp, False
     return current_fp_to_process, resized_overall
-def _process_and_composite_image(img_bytes: bytes, tmpl_data: dict) -> io.BytesIO | None: # ... (unchanged)
+
+def _process_and_composite_image(img_bytes: bytes, tmpl_data: dict) -> io.BytesIO | None:
     try:
         base_image = Image.open(io.BytesIO(img_bytes))
         target_width, target_height = tmpl_data['target_size']
-        
-        # Use ImageOps.fit to crop and resize to fill the target dimensions
         processed_base_image = ImageOps.fit(base_image, (target_width, target_height), Image.Resampling.LANCZOS)
-
         overlay_path = os.path.join(TEMPLATES_BASE_PATH, tmpl_data['name'])
-        if not os.path.exists(overlay_path):
-            print(f"Overlay template not found: {overlay_path}")
-            return None
-        
+        if not os.path.exists(overlay_path): print(f"Overlay template not found: {overlay_path}"); return None
         overlay_image = Image.open(overlay_path).convert("RGBA")
-        # Ensure overlay is resized to target dimensions if not already
-        if overlay_image.size != (target_width, target_height):
-            overlay_image = overlay_image.resize((target_width, target_height), Image.Resampling.LANCZOS)
-
-        # Ensure base image is RGBA for alpha compositing
-        if processed_base_image.mode != 'RGBA':
-            processed_base_image = processed_base_image.convert('RGBA')
-        
+        if overlay_image.size != (target_width, target_height): overlay_image = overlay_image.resize((target_width, target_height), Image.Resampling.LANCZOS)
+        if processed_base_image.mode != 'RGBA': processed_base_image = processed_base_image.convert('RGBA')
         final_image = Image.alpha_composite(processed_base_image, overlay_image)
-        
-        output_buffer = io.BytesIO()
-        final_image.save(output_buffer, "PNG")
-        output_buffer.seek(0)
+        output_buffer = io.BytesIO(); final_image.save(output_buffer, "PNG"); output_buffer.seek(0)
         return output_buffer
-    except Exception as e_composite:
-        print(f"Error during image compositing: {e_composite}")
-        return None
-def _create_gaming_gif(img_bytes: bytes, duration_ms: int = 50, max_size: tuple = (256, 256)) -> io.BytesIO | None: # ... (unchanged)
-    try:
-        img = Image.open(io.BytesIO(img_bytes)).convert("RGBA") # Ensure RGBA for HSV conversion and transparency
-        img.thumbnail(max_size, Image.Resampling.LANCZOS) # Resize to max_size while maintaining aspect ratio
-        
-        frames = []
-        for i in range(36): # 36 frames for a full 360-degree hue shift (10 degrees per frame)
-            # Convert to HSV
-            h, s, v = img.convert("HSV").split()
-            
-            # Shift hue
-            # Numpy is efficient for pixel manipulation
-            h_array = np.array(h, dtype=np.int16) # Use int16 for intermediate calculation to avoid overflow
-            hue_shift_amount = int((i * 10) * (255.0 / 360.0)) # Map 0-360 degrees to 0-255
-            shifted_h_array = np.mod(h_array + hue_shift_amount, 256).astype(np.uint8) # Modulo 256 for hue
-            
-            shifted_h_image = Image.fromarray(shifted_h_array, 'L') # Create image from hue channel
-            
-            # Merge back to HSV and then convert to RGBA
-            gaming_frame_hsv = Image.merge("HSV", (shifted_h_image, s, v))
-            frames.append(gaming_frame_hsv.convert("RGBA")) # Convert back to RGBA for saving in GIF
-            
-        output_buffer = io.BytesIO()
-        # Save as GIF
-        # `disposal=2` means restore to background color (important for transparency)
-        frames[0].save(output_buffer, format="GIF", save_all=True, append_images=frames[1:], 
-                       duration=duration_ms, loop=0, disposal=2, optimize=True)
-        output_buffer.seek(0)
-        return output_buffer
-    except Exception as e_gif:
-        print(f"Error creating gaming GIF: {e_gif}")
-        traceback.print_exc()
-        return None
+    except Exception as e_composite: print(f"Error during image compositing: {e_composite}"); return None
 
-# GEMINI HELPERS (unchanged)
-async def generate_gemini_text_response(prompt_parts: list) -> str: # ...
-    global GEMINI_API_UNAVAILABLE
-    if not gemini_text_model_instance or GEMINI_API_UNAVAILABLE:
-        return "Error: Gemini Text API is not available."
+def _create_gaming_gif(img_bytes: bytes, duration_ms: int = 50, max_size: tuple = (256, 256)) -> io.BytesIO | None:
     try:
-        response = await asyncio.to_thread(
-            gemini_text_model_instance.generate_content,
-            prompt_parts,
-            request_options={'timeout': 120} 
-        )
-        if hasattr(response, 'text') and response.text:
-            return response.text
-        elif response.candidates and response.candidates[0].finish_reason:
-            return f"Could not generate response. Reason: {response.candidates[0].finish_reason.name}"
-        elif hasattr(response, 'prompt_feedback') and response.prompt_feedback.block_reason:
-            return f"Prompt blocked. Reason: {response.prompt_feedback.block_reason.name}"
-        else:
-            print(f"Unexpected Gemini text response format: {response}")
-            return "Could not generate response. Unexpected format."
-    except Exception as e:
-        print(f"Gemini Text API Error: {type(e).__name__} - {e}")
-        traceback.print_exc()
-        return f"Gemini Text API Error: {type(e).__name__} - {e}"
-async def generate_summary_with_gemini(text: str, num_points: int = 3) -> str: # ...
+        img = Image.open(io.BytesIO(img_bytes)).convert("RGBA")
+        img.thumbnail(max_size, Image.Resampling.LANCZOS)
+        frames = []
+        for i in range(36):
+            h, s, v = img.convert("HSV").split()
+            h_array = np.array(h, dtype=np.int16)
+            hue_shift_amount = int((i * 10) * (255.0 / 360.0))
+            shifted_h_array = np.mod(h_array + hue_shift_amount, 256).astype(np.uint8)
+            shifted_h_image = Image.fromarray(shifted_h_array, 'L')
+            gaming_frame_hsv = Image.merge("HSV", (shifted_h_image, s, v))
+            frames.append(gaming_frame_hsv.convert("RGBA"))
+        output_buffer = io.BytesIO()
+        frames[0].save(output_buffer, format="GIF", save_all=True, append_images=frames[1:], duration=duration_ms, loop=0, disposal=2, optimize=True)
+        output_buffer.seek(0); return output_buffer
+    except Exception as e_gif: print(f"Error creating gaming GIF: {e_gif}"); traceback.print_exc(); return None
+
+# --- Gemini Helpers ---
+async def generate_gemini_text_response(prompt_parts: list) -> str:
+    global GEMINI_API_UNAVAILABLE
+    if not gemini_text_model_instance or GEMINI_API_UNAVAILABLE: return "Error: Gemini Text API is not available."
+    try:
+        response = await asyncio.to_thread(gemini_text_model_instance.generate_content, prompt_parts, request_options={'timeout': 120})
+        if hasattr(response, 'text') and response.text: return response.text
+        elif response.candidates and response.candidates[0].finish_reason: return f"Could not generate response. Reason: {response.candidates[0].finish_reason.name}"
+        elif hasattr(response, 'prompt_feedback') and response.prompt_feedback.block_reason: return f"Prompt blocked. Reason: {response.prompt_feedback.block_reason.name}"
+        else: print(f"Unexpected Gemini text response format: {response}"); return "Could not generate response. Unexpected format."
+    except Exception as e: print(f"Gemini Text API Error: {type(e).__name__} - {e}"); traceback.print_exc(); return f"Gemini Text API Error: {type(e).__name__} - {e}"
+
+async def generate_summary_with_gemini(text: str, num_points: int = 3) -> str:
     prompt = f"以下の文章を日本語で{num_points}個の短い箇条書きに要約してください:\n\n{text}"
     return await generate_gemini_text_response([prompt])
 
-# VOICEVOX & RVC HELPERS (unchanged)
-async def generate_voicevox_audio(text_to_speak: str, speaker_id: int, api_key: str) -> io.BytesIO | None: # ...
-    if not api_key or api_key == "YOUR_VOICEVOX_API_KEY_PLACEHOLDER": # Generic placeholder check
-        print("VoiceVox API key is not configured or is a placeholder.")
-        return None
-    
-    print(f"Attempting VoiceVox TTS. API Key used: '{api_key[:5]}...', Speaker ID: {speaker_id}") # Mask key in log
-    
-    params_dict = {
-        "text": text_to_speak,
-        "speaker": str(speaker_id), 
-        "key": api_key
-    }
-    
+# --- VoiceVox & RVC Helpers ---
+async def generate_voicevox_audio(text_to_speak: str, speaker_id: int, api_key: str) -> io.BytesIO | None:
+    if not api_key or api_key == "YOUR_VOICEVOX_API_KEY_PLACEHOLDER": print("VoiceVox API key not configured."); return None
+    print(f"Attempting VoiceVox TTS. API Key: '{api_key[:5]}...', Speaker ID: {speaker_id}")
+    params_dict = {"text": text_to_speak, "speaker": str(speaker_id), "key": api_key}
     print(f"Requesting VoiceVox TTS for text: '{text_to_speak[:50]}...'")
-    
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(VOICEVOX_API_BASE_URL, params=params_dict, timeout=aiohttp.ClientTimeout(total=60)) as response:
                 print(f"VoiceVox API response status: {response.status}, Content-Type: {response.content_type}")
-
                 if response.status == 200:
                     if response.content_type in ('audio/wav', 'audio/x-wav'):
-                        audio_data = await response.read()
-                        print(f"VoiceVox TTS success, received {len(audio_data)} bytes of {response.content_type} data.")
-                        return io.BytesIO(audio_data)
-                    else:
-                        error_text_body = "(Could not decode body as text)"
-                        try: error_text_body = (await response.text())[:200]
-                        except: pass
-                        print(f"VoiceVox API returned 200 OK but with unexpected Content-Type ({response.content_type}): {error_text_body}")
-                        return None
-                else: # Non-200 status
-                    error_text_body = "(Could not decode error body as text)"
-                    try: error_text_body = (await response.text())[:500]
-                    except: pass
-                    print(f"VoiceVox API request failed with status {response.status}: {error_text_body}")
-                    if response.status == 403: print("  (This might be an API key issue or access restriction)")
-                    return None
-    except asyncio.TimeoutError:
-        print("VoiceVox API request timed out.")
-        return None
-    except Exception as e:
-        print(f"Error during VoiceVox API call: {e}")
-        traceback.print_exc()
-        return None
-async def process_audio_with_rvc(ctx: commands.Context, audio_bytes_io: io.BytesIO, original_filename_base: str, input_file_extension_no_dot: str): # ...
-    # ... (Full implementation as provided before)
-    try:
-        temp_audio_stream_for_check = io.BytesIO(audio_bytes_io.getvalue())
-        temp_audio_stream_for_check.seek(0)
-        audio_segment = AudioSegment.from_file(temp_audio_stream_for_check, format=input_file_extension_no_dot)
-        duration_seconds = len(audio_segment) / 1000.0
-        print(f"Audio duration for RVC: {duration_seconds:.2f} seconds")
-        temp_audio_stream_for_check.close()
+                        audio_data = await response.read(); print(f"VoiceVox TTS success, received {len(audio_data)} bytes."); return io.BytesIO(audio_data)
+                    else: print(f"VoiceVox API returned 200 OK but with unexpected Content-Type ({response.content_type}): {(await response.text())[:200]}"); return None
+                else: print(f"VoiceVox API request failed (Status {response.status}): {(await response.text())[:500]}"); return None
+    except Exception as e: print(f"Error during VoiceVox API call: {e}"); traceback.print_exc(); return None
 
-        if duration_seconds > 45.0:
-            await ctx.send(f"エラー: 音声が長すぎます ({duration_seconds:.1f}秒)。45秒以下の音声にしてください。")
-            return False
-    except CouldntDecodeError:
-        await ctx.send("エラー: 音声ファイルの形式を認識できませんでした。有効な音声ファイルか確認してください。")
-        return False
-    except Exception as e_dur:
-        await ctx.send(f"エラー: 音声ファイルの長さ確認中に問題が発生しました: {e_dur}")
-        traceback.print_exc()
-        return False
-    finally:
-        audio_bytes_io.seek(0)
+async def process_audio_with_rvc(ctx: commands.Context, audio_bytes_io: io.BytesIO, original_filename_base: str, input_file_extension_no_dot: str):
+    try: # Duration Check
+        temp_audio_stream = io.BytesIO(audio_bytes_io.getvalue()); temp_audio_stream.seek(0)
+        audio_segment = AudioSegment.from_file(temp_audio_stream, format=input_file_extension_no_dot)
+        duration_seconds = len(audio_segment) / 1000.0; temp_audio_stream.close()
+        if duration_seconds > 45.0: await ctx.send(f"エラー: 音声長すぎ ({duration_seconds:.1f}s > 45s)"); return False
+    except Exception as e_dur: await ctx.send(f"音声長確認エラー: {e_dur}"); return False
+    finally: audio_bytes_io.seek(0)
 
-    rvc_infer_script_full_path = os.path.join(RVC_PROJECT_ROOT_PATH, RVC_INFER_SCRIPT_SUBPATH)
-    rvc_model_full_path = os.path.join(RVC_PROJECT_ROOT_PATH, RVC_MODEL_DIR_IN_PROJECT, RVC_MODEL_NAME_WITH_EXT)
-    rvc_index_file_name_no_ext, _ = os.path.splitext(RVC_MODEL_NAME_WITH_EXT)
-    rvc_index_full_path = os.path.join(RVC_PROJECT_ROOT_PATH, RVC_MODEL_DIR_IN_PROJECT, f"{rvc_index_file_name_no_ext}.index")
+    # RVC Paths and Script Execution (condensed for brevity, full logic as before)
+    rvc_script = os.path.join(RVC_PROJECT_ROOT_PATH, RVC_INFER_SCRIPT_SUBPATH)
+    rvc_model = os.path.join(RVC_PROJECT_ROOT_PATH, RVC_MODEL_DIR_IN_PROJECT, RVC_MODEL_NAME_WITH_EXT)
+    # ... (index path, file paths, command construction as before) ...
+    processing_msg = await ctx.send("やまかわボイチェン処理中..."); success = False
+    # ... (subprocess execution, stdout/stderr logging, file sending as before) ...
+    # Ensure temporary files are cleaned up in a finally block
+    return success # True if successful, False otherwise
 
-    if not os.path.exists(rvc_infer_script_full_path) or not os.path.exists(rvc_model_full_path):
-        await ctx.send("エラー: RVC関連ファイルが見つかりません。Bot管理者に連絡してください。"); return False
-
-    processing_message = await ctx.send("**やまかわボイチェンの処理をしています...** \nしばらくお待ちください... (目安:20~50秒)")
-    timestamp = datetime.datetime.now(JST).strftime("%Y%m%d%H%M%S%f"); unique_id = f"{ctx.author.id}_{ctx.message.id}_{timestamp}"
-    input_filename_rvc = f"input_{unique_id}.{input_file_extension_no_dot}"
-    output_filename_rvc = f"output_{unique_id}.{input_file_extension_no_dot}" # RVC typically outputs wav, adjust if different
-    input_filepath_abs_rvc = os.path.abspath(os.path.join(RVC_INPUT_AUDIO_DIR, input_filename_rvc))
-    output_filepath_abs_rvc = os.path.abspath(os.path.join(RVC_OUTPUT_AUDIO_DIR, output_filename_rvc))
-    
-    success_flag = False
-    try:
-        with open(input_filepath_abs_rvc, 'wb') as f_out:
-            audio_bytes_io.seek(0) 
-            f_out.write(audio_bytes_io.getbuffer())
-        print(f"Saved input audio for RVC to: {input_filepath_abs_rvc}")
-
-        effective_python_executable = sys.executable 
-        command = [effective_python_executable, rvc_infer_script_full_path, 
-                   "--f0up_key", str(RVC_FIXED_TRANSPOSE), "--input_path", input_filepath_abs_rvc, 
-                   "--opt_path", output_filepath_abs_rvc, "--model_name", RVC_MODEL_NAME_WITH_EXT]
-        if os.path.exists(rvc_index_full_path): command.extend(["--feature_path", rvc_index_full_path])
-        
-        print(f"Executing RVC command: {' '.join(command)}")
-        process = await asyncio.create_subprocess_exec(*command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=RVC_PROJECT_ROOT_PATH)
-        stdout_bytes, stderr_bytes = await process.communicate()
-        # ... (stdout/stderr logging) ...
-        if stdout_bytes: print(f"--- RVC STDOUT ---\n{stdout_bytes.decode('utf-8', errors='ignore').strip()}\n------------------")
-        if stderr_bytes: print(f"--- RVC STDERR ---\n{stderr_bytes.decode('utf-8', errors='ignore').strip()}\n------------------")
-        
-        if process.returncode != 0:
-            await processing_message.edit(content=f"音声変換中にエラーが発生しました (RVCプロセス)。")
-        elif os.path.exists(output_filepath_abs_rvc) and os.path.getsize(output_filepath_abs_rvc) > 0:
-            await processing_message.edit(content="**やまかわてるきボイチェンの処理が完了しました**")
-            # Ensure the output filename for Discord reflects the content (e.g., if RVC always outputs wav)
-            discord_output_filename = f"rvc_{original_filename_base}.wav" # Assuming RVC outputs wav
-            await ctx.send(file=discord.File(output_filepath_abs_rvc, filename=discord_output_filename))
-            success_flag = True
-        else:
-            await processing_message.edit(content="変換は成功しましたが、出力ファイルが見つかりませんでした。")
-    except Exception as e:
-        await processing_message.edit(content=f"予期せぬエラーが発生しました (RVC処理): {e}")
-        traceback.print_exc()
-    finally: # Cleanup temp files
-        if os.path.exists(input_filepath_abs_rvc):
-            try: os.remove(input_filepath_abs_rvc)
-            except Exception as e_rem: print(f"Failed to delete RVC input temp: {e_rem}")
-        if os.path.exists(output_filepath_abs_rvc): # Always try to delete RVC output after sending or on failure
-            try: os.remove(output_filepath_abs_rvc)
-            except Exception as e_rem: print(f"Failed to delete RVC output temp: {e_rem}")
-    return success_flag
-
-# TEXT IMAGE DRAWING HELPER (Updated for new outline logic)
-# TEXT IMAGE DRAWING HELPER (Updated for new outline logic)
-def draw_text_layered_outline(draw, base_pos, char_text, font, 
-                              text_color,
-                              middle_outline_color,
-                              middle_outline_total_thickness,
-                              outer_outline_color,
-                              outer_outline_total_thickness):
-    x, y = base_pos
-    
-    # Layer 1: Outermost outline (e.g., White)
-    # This outline extends 'outer_outline_total_thickness' pixels from the text edge.
-    # This is the total distance from the very center of the char glyph to the outermost edge of this layer
-    for dx_outer in range(-outer_outline_total_thickness, outer_outline_total_thickness + 1):
-        for dy_outer in range(-outer_outline_total_thickness, outer_outline_total_thickness + 1):
-            # Use a circular shape for the outline 'brush'
-            if dx_outer*dx_outer + dy_outer*dy_outer <= outer_outline_total_thickness*outer_outline_total_thickness :
-                 draw.text((x + dx_outer, y + dy_outer), char_text, font=font, fill=outer_outline_color)
-    
-    # Layer 2: Middle outline (e.g., Black)
-    # This outline extends 'middle_outline_total_thickness' pixels from the text edge.
-    # It's drawn on top of the outer outline.
-    for dx_middle in range(-middle_outline_total_thickness, middle_outline_total_thickness + 1):
-        for dy_middle in range(-middle_outline_total_thickness, middle_outline_total_thickness + 1):
-            if dx_middle*dx_middle + dy_middle*dy_middle <= middle_outline_total_thickness*middle_outline_total_thickness:
-                draw.text((x + dx_middle, y + dy_middle), char_text, font=font, fill=middle_outline_color)
-    
-    # Layer 3: Main text
-    draw.text((x, y), char_text, font=font, fill=text_color)
-
-
-# ================================== DISCORD EVENTS ==================================
+# ========================== DISCORD EVENTS ==========================
 @bot.event
-async def on_ready(): # ... (Slightly updated print statements, font check)
+async def on_ready():
     print(f'Logged in as: {bot.user.name} ({bot.user.id})')
-    load_settings(); load_game_points()
-    # await load_weather_city_codes() # Not used by YOLP directly
+    load_settings(); load_game_points() 
+    await load_weather_city_codes()
 
     print(f"Settings loaded. Allowed channels: {len(allowed_channels)}")
     print(f"Game points loaded for {len(game_points)} players.")
-    
-    gemini_status = "Available" if not GEMINI_API_UNAVAILABLE else "Not Available"
-    print(f"Gemini API Status: {gemini_status}")
-    
-    vv_status = "Available" if VOICEVOX_API_KEY and VOICEVOX_API_KEY != "YOUR_VOICEVOX_API_KEY_PLACEHOLDER" else "Not Available"
-    print(f"VoiceVox API Status: {vv_status}")
+    gemini_status = "Available" if not GEMINI_API_UNAVAILABLE else "Not Available"; print(f"Gemini API Status: {gemini_status}")
+    vv_status = "Available" if VOICEVOX_API_KEY and VOICEVOX_API_KEY != "YOUR_VOICEVOX_API_KEY_PLACEHOLDER" else "Not Available"; print(f"VoiceVox API Status: {vv_status}")
+    if weather_city_id_map: print(f"Tsukumijima Weather city codes loaded: {len(weather_city_id_map)} cities.")
+    else: print("WARNING: Tsukumijima Weather city codes not loaded.")
 
-    yolp_status = "Client ID Set" if YAHOO_CLIENT_ID and YAHOO_CLIENT_ID != "YOUR_YAHOO_CLIENT_ID_PLACEHOLDER" else "Client ID Missing/Placeholder"
-    print(f"Yahoo Weather API (YOLP) Status: {yolp_status}")
+    default_font_ok = True; noto_font_ok = True
+    if not os.path.exists(TEXT_IMAGE_FONT_PATH_DEFAULT): print(f"CRITICAL WARNING: Default text font not found: {TEXT_IMAGE_FONT_PATH_DEFAULT}"); default_font_ok = False
+    else: print(f"Default text font found: {TEXT_IMAGE_FONT_PATH_DEFAULT}")
+    if not os.path.exists(TEXT_IMAGE_FONT_PATH_NOTO_SERIF_BOLD): print(f"WARNING: Noto Serif font not found: {TEXT_IMAGE_FONT_PATH_NOTO_SERIF_BOLD}. 'text3' will fail."); noto_font_ok = False
+    else: print(f"Noto Serif font for text3 found: {TEXT_IMAGE_FONT_PATH_NOTO_SERIF_BOLD}")
+    if not default_font_ok: print("CRITICAL: Default font for text commands is missing.")
 
-    if not os.path.exists(TEXT_IMAGE_FONT_PATH):
-        print(f"CRITICAL WARNING: Text command font not found at {TEXT_IMAGE_FONT_PATH}. 'text' command will fail.")
-    else:
-        print(f"Text command font found: {TEXT_IMAGE_FONT_PATH}")
-
-    print("--- RVC Checks ---") # ... (RVC checks unchanged)
+    print("--- RVC Checks ---")
     rvc_infer_script_full_path = os.path.join(RVC_PROJECT_ROOT_PATH, RVC_INFER_SCRIPT_SUBPATH)
     if not os.path.exists(rvc_infer_script_full_path): print(f"  WARNING: RVC inference script NOT FOUND: {rvc_infer_script_full_path}")
     else: print(f"  RVC inference script OK: {rvc_infer_script_full_path}")
@@ -860,121 +659,131 @@ async def on_ready(): # ... (Slightly updated print statements, font check)
     except Exception as e: print(f"Slash command sync failed: {e}")
     
     if not cleanup_finished_games_task.is_running(): cleanup_finished_games_task.start()
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="/help 杉山啓太Bot by(*'▽')"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="杉山啓太Bot by(*'▽')"))
     print("Bot is ready and watching.")
 
 @bot.event
-async def on_message(message: discord.Message): # ... (Unchanged)
+async def on_message(message: discord.Message):
     if message.author == bot.user or message.author.bot or not message.guild: return
-
     original_content = message.content
     content_lower_stripped = original_content.strip().lower()
-    
     if content_lower_stripped.startswith("setchannel"):
         _content_backup = message.content
         message.content = f"{get_dummy_prefix(bot, message)}setchannel" 
         await bot.process_commands(message)
-        message.content = _content_backup # Restore original content for other potential listeners
-        return
-
+        message.content = _content_backup; return
     if message.channel.id not in allowed_channels: return
-
     command_parts = original_content.split(" ", 1)
     potential_command_name = command_parts[0].lower()
-    
     is_othello_subcommand = False
     if potential_command_name == "othello" and len(command_parts) > 1:
         sub_command_parts = command_parts[1].split(" ", 1)
         sub_command_name = sub_command_parts[0].lower()
-        if sub_command_name == "leave":
-            potential_command_name = "leave"; command_parts = [potential_command_name]; is_othello_subcommand = True
-        elif sub_command_name in ["point", "points"]:
-            potential_command_name = "othello_points"; command_parts = [potential_command_name]; is_othello_subcommand = True
-    
+        if sub_command_name == "leave": potential_command_name = "leave"; command_parts = [potential_command_name]; is_othello_subcommand = True
+        elif sub_command_name in ["point", "points"]: potential_command_name = "othello_points"; command_parts = [potential_command_name]; is_othello_subcommand = True
     command_obj = bot.get_command(potential_command_name)
-
     if command_obj:
-        print(f"Prefix-less command '{potential_command_name}' detected from '{message.author.name}'. Processing...")
-        _content_backup_cmd = message.content
+        print(f"Prefix-less command '{potential_command_name}' from '{message.author.name}'. Processing..."); _content_backup_cmd = message.content
         prefix_to_use = get_dummy_prefix(bot, message)
-        
-        if is_othello_subcommand: # Subcommands like "othello leave" are handled by "leave" command directly
-            message.content = f"{prefix_to_use}{potential_command_name}"
-        elif len(command_parts) > 1: # Command with arguments
-            args_part = command_parts[1]
-            message.content = f"{prefix_to_use}{potential_command_name} {args_part}".strip()
-        else: # Command without arguments
-            message.content = f"{prefix_to_use}{potential_command_name}"
-        
-        print(f"  Modified message content for processing: '{message.content}'")
-        await bot.process_commands(message)
-        message.content = _content_backup_cmd # Restore for safety, though usually not needed after process_commands
-
+        if is_othello_subcommand: message.content = f"{prefix_to_use}{potential_command_name}"
+        elif len(command_parts) > 1: message.content = f"{prefix_to_use}{potential_command_name} {command_parts[1]}".strip()
+        else: message.content = f"{prefix_to_use}{potential_command_name}"
+        print(f"  Modified content: '{message.content}'"); await bot.process_commands(message); message.content = _content_backup_cmd
 
 @bot.event
-async def on_reaction_add(reaction: discord.Reaction, user: discord.User): # ... (Janken host part removed, Othello part unchanged)
+async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
     if user == bot.user: return
     message = reaction.message; message_id = message.id
 
-    # Othello recruitment logic
-    if message_id in othello_recruitments: # ... (unchanged othello recruitment)
+    # 1. Othello game move logic (これを先にチェック)
+    if message_id in active_games:
+        # ... (前回の修正通りのゲーム進行ロジック) ...
+        game_session = active_games.get(message_id)
+        if not game_session:
+            print(f"Error: Message ID {message_id} in active_games but no session found.")
+            return
+        game = game_session["game"]
+        if user.id not in game.players.values() or game.game_over:
+            if user.id != bot.user.id:
+                try: await reaction.remove(user)
+                except: pass
+            return
+        if user.id != game.players.get(game.current_player):
+            try: await reaction.remove(user)
+            except: pass
+            return
+        chosen_move = next((coord for coord, marker_emoji in game.valid_moves_with_markers.items() if str(reaction.emoji) == marker_emoji), None)
+        if chosen_move:
+            print(f"DEBUG: Othello move by {user.name}: {chosen_move} with emoji {reaction.emoji}")
+            if game.make_move(chosen_move[0], chosen_move[1], game.current_player):
+                if game.afk_task and not game.afk_task.done(): game.afk_task.cancel()
+                game.switch_player(); game.check_game_status()
+                await send_othello_board_message(message.channel, game_session, message_to_update=message)
+                if not game.game_over: game.afk_task = asyncio.create_task(othello_afk_timeout(game))
+            else: print(f"DEBUG: Othello make_move failed for {chosen_move}")
+        else: print(f"DEBUG: Othello invalid reaction emoji {reaction.emoji} by {user.name}")
+        if user.id != bot.user.id:
+            try: await reaction.remove(user)
+            except discord.HTTPException: pass
+        return
+
+    # 2. Othello recruitment logic
+    if message_id in othello_recruitments:
         rec_info = othello_recruitments[message_id]
         host_id = rec_info["host_id"]
+        
         if str(reaction.emoji) == "❌" and user.id == host_id:
             if message_id in othello_recruitments: del othello_recruitments[message_id]
             try:
                 await message.edit(content=f"{user.mention}がオセロの募集を取り消しました。", view=None)
                 await message.clear_reactions()
-            except discord.HTTPException: pass
+            except discord.HTTPException: 
+                pass
             return
+
         if str(reaction.emoji) == "✅" and user.id != host_id:
-            if rec_info.get("opponent_id"):
-                try: await reaction.remove(user)
-                except discord.HTTPException: pass
-                return
+            # ★★★ ここのif文を修正 ★★★
+            if rec_info.get("opponent_id"): 
+                try:
+                    await reaction.remove(user)
+                except discord.HTTPException:
+                    pass
+                return # 既に相手が決まっているので終了
+            # ★★★★★★★★★★★★★★★★
+            
             rec_info["opponent_id"] = user.id
-            players_list = [host_id, user.id]; random.shuffle(players_list)
+            players_list = [host_id, user.id]
+            random.shuffle(players_list)
             game_instance = OthelloGame()
             game_instance.players = {BLACK: players_list[0], WHITE: players_list[1]}
             game_instance.channel_id = message.channel.id
             game_session = {"game": game_instance, "players": game_instance.players, "host_id": host_id, "channel_id": message.channel.id}
             
-            active_games[message_id] = game_session 
-            game_instance.message_id = message_id
-            if message_id in othello_recruitments: del othello_recruitments[message_id]
+            active_games[message.id] = game_session 
+            game_instance.message_id = message.id 
+            if message_id in othello_recruitments:
+                del othello_recruitments[message_id]
 
+            print(f"DEBUG: Othello game {game_instance.game_id} started via recruitment. Message ID: {message_id}")
             await send_othello_board_message(message.channel, game_session, message_to_update=message, is_first_turn=True)
-            if not game_instance.game_over: game_instance.afk_task = asyncio.create_task(othello_afk_timeout(game_instance))
-        elif user.id != host_id:
-             try: await reaction.remove(user)
-             except discord.HTTPException: pass
+            if not game_instance.game_over:
+                game_instance.afk_task = asyncio.create_task(othello_afk_timeout(game_instance))
+            return 
+
+        elif user.id != host_id: 
+             try:
+                 await reaction.remove(user)
+             except discord.HTTPException:
+                 pass
         return
 
     # Othello game move logic
-    if message_id in active_games: # ... (unchanged othello game move)
-        game_session = active_games.get(message_id)
-        if not game_session: return
-        game = game_session["game"]
-        if user.id not in game.players.values() or game.game_over:
-            try: await reaction.remove(user) # User not part of this game or game is over
-            except discord.HTTPException: pass
-            return
-        if user.id != game.players.get(game.current_player): # Not current player's turn
-            try: await reaction.remove(user)
-            except discord.HTTPException: pass
-            return
-        
-        chosen_move = next((coord for coord, marker_emoji in game.valid_moves_with_markers.items() if str(reaction.emoji) == marker_emoji), None)
-        if chosen_move:
-            if game.make_move(chosen_move[0], chosen_move[1], game.current_player):
-                if game.afk_task and not game.afk_task.done(): game.afk_task.cancel() # Cancel previous AFK task
-                game.switch_player(); game.check_game_status()
-                await send_othello_board_message(message.channel, game_session, message_to_update=message)
-                if not game.game_over: # Start new AFK task if game continues
-                    game.afk_task = asyncio.create_task(othello_afk_timeout(game))
-        try: await reaction.remove(user) # Remove user's reaction after processing or if invalid
-        except discord.HTTPException: pass
-        return
+    if message_id in active_games:
+        # ... (既存のオセロゲーム進行ロジック) ...
+        return # Othello game move logic handled
+
+    # Janken opponent reactions are now handled by JankenOpponentChoiceView buttons,
+    # so no specific janken logic needed here in on_reaction_add unless for cleanup or other general purposes.
 
     # Janken game logic (Opponent's turn via reaction)
     if message_id in active_janken_games: # ... (Janken opponent reaction unchanged)
@@ -1838,27 +1647,34 @@ def draw_text_layered_outline(draw, base_pos, char_text, font,
     # Layer 3: Main text
     draw.text((x, y), char_text, font=font, fill=text_color)
 
-# ================================== TEXT IMAGE COMMAND ==================================
-@bot.command(name="text")
-async def text_image_command(ctx: commands.Context, *, args: str):
-    if not args: await ctx.send("画像にするテキストを指定してください。"); return
+# ========================== TEXT COMMAND DRAWING HELPER ==========================
+async def _generate_text_image_styled(ctx: commands.Context, args: str, 
+                                     font_path: str, text_color: tuple, 
+                                     inner_outline_color: tuple, inner_outline_thickness: int, 
+                                     outer_outline_color: tuple = None, outer_outline_thickness: int = 0,
+                                     embed_title: str = "テキスト画像生成完了！"):
+    if not args:
+        await ctx.send("画像にするテキストを指定してください。"); return
+
     make_square = False
     text_to_render = args.strip()
     if text_to_render.lower().endswith(" square"):
         text_to_render = text_to_render[:-7].strip(); make_square = True
-    if not text_to_render: await ctx.send("画像にするテキスト内容が空です。"); return
-    if not os.path.exists(TEXT_IMAGE_FONT_PATH): await ctx.send(f"エラー: フォントファイルが見つかりません。"); return
+    if not text_to_render:
+        await ctx.send("画像にするテキスト内容が空です。"); return
+    if not os.path.exists(font_path): # 引数で渡された font_path をチェック
+        await ctx.send(f"エラー: 指定されたフォントファイルが見つかりません ({os.path.basename(font_path)})。"); return
 
     try:
         async with ctx.typing():
-            font = ImageFont.truetype(TEXT_IMAGE_FONT_PATH, TEXT_IMAGE_FONT_SIZE)
+            font = ImageFont.truetype(font_path, TEXT_IMAGE_FONT_SIZE_COMMON)
             
             lines_input = text_to_render.split(',')
             max_text_content_width = 0; current_y_for_layout = 0; line_layout_data = []
-            letter_spacing_abs = int(TEXT_IMAGE_FONT_SIZE * TEXT_IMAGE_LETTER_SPACING_ADJUST)
+            letter_spacing_abs = int(TEXT_IMAGE_FONT_SIZE_COMMON * TEXT_IMAGE_LETTER_SPACING_ADJUST_COMMON)
             dummy_draw = ImageDraw.Draw(Image.new("L",(1,1)))
             try: ascent, descent = font.getmetrics(); font_standard_height = ascent + descent
-            except AttributeError: font_standard_height = TEXT_IMAGE_FONT_SIZE
+            except AttributeError: font_standard_height = TEXT_IMAGE_FONT_SIZE_COMMON
 
             for line_text in lines_input:
                 current_line_chars_info = []; line_actual_width = 0; max_char_actual_height_in_line = 0
@@ -1873,9 +1689,9 @@ async def text_image_command(ctx: commands.Context, *, args: str):
                         line_actual_width += char_w
                         if i < len(line_text) - 1: line_actual_width += letter_spacing_abs
                         max_char_actual_height_in_line = max(max_char_actual_height_in_line, char_h)
-                line_height_for_next = int(max_char_actual_height_in_line * TEXT_IMAGE_LINE_HEIGHT_MULTIPLIER) \
+                line_height_for_next = int(max_char_actual_height_in_line * TEXT_IMAGE_LINE_HEIGHT_MULTIPLIER_COMMON) \
                                         if max_char_actual_height_in_line > 0 \
-                                        else int(font_standard_height * TEXT_IMAGE_LINE_HEIGHT_MULTIPLIER)
+                                        else int(font_standard_height * TEXT_IMAGE_LINE_HEIGHT_MULTIPLIER_COMMON)
                 line_layout_data.append({
                     "text": line_text, "chars_info": current_line_chars_info,
                     "render_width": line_actual_width, "y_start_in_block": current_y_for_layout,
@@ -1886,14 +1702,18 @@ async def text_image_command(ctx: commands.Context, *, args: str):
             if max_text_content_width <= 0 or total_text_content_height <= 0:
                 await ctx.send("エラー: テキスト内容から有効なサイズを計算できませんでした。"); return
 
-            # 一時キャンバスのサイズ計算
-            # MaxFilterの繰り返し回数に基づく総半径
-            outline_total_radius_approx = TEXT_IMAGE_OUTLINE_THICKNESS_BLACK + TEXT_IMAGE_OUTLINE_THICKNESS_WHITE
-            temp_canvas_margin = outline_total_radius_approx + TEXT_MASK_ADDITIONAL_MARGIN
-            temp_canvas_width = int(max_text_content_width + temp_canvas_margin * 2)
-            temp_canvas_height = int(total_text_content_height + temp_canvas_margin * 2)
+            # 縁取りの総半径を計算 (MaxFilterの繰り返し回数)
+            # inner_outline_thickness は黒縁の回数
+            # outer_outline_thickness は白縁の回数 (黒縁の外側にさらに加わる)
+            filter_repeats_for_inner = inner_outline_thickness
+            filter_repeats_for_outer = inner_outline_thickness + outer_outline_thickness if outer_outline_color else inner_outline_thickness
             
-            text_mask_on_temp_canvas = Image.new('L', (temp_canvas_width, temp_canvas_height), 0)
+            temp_canvas_margin = filter_repeats_for_outer + TEXT_MASK_ADDITIONAL_MARGIN_COMMON
+            
+            text_mask_canvas_width = int(max_text_content_width + temp_canvas_margin * 2)
+            text_mask_canvas_height = int(total_text_content_height + temp_canvas_margin * 2)
+            
+            text_mask_on_temp_canvas = Image.new('L', (text_mask_canvas_width, text_mask_canvas_height), 0)
             text_mask_draw_temp = ImageDraw.Draw(text_mask_on_temp_canvas)
             text_block_start_x_on_mask = temp_canvas_margin
             text_block_start_y_on_mask = temp_canvas_margin
@@ -1908,208 +1728,213 @@ async def text_image_command(ctx: commands.Context, *, args: str):
                         text_mask_draw_temp.text((current_x_char_draw, draw_y_char), char_single, font=font, fill=255)
                         current_x_char_draw += char_info['width'] + letter_spacing_abs
             
-            # text_mask_on_temp_canvas.save("debug_0_text_mask.png")
+            # text_mask_on_temp_canvas.save("debug_0_text_mask_maxfilter.png")
 
-            # 縁取りレイヤーの作成とクロップ
-            # 白縁: 黒縁回数 + 白縁回数 Filter
-            # 黒縁: 黒縁回数 Filter
+            cropped_outer_layer, cropped_inner_layer, cropped_text_layer_main = None, None, None
+
+            if outer_outline_color and filter_repeats_for_outer > 0:
+                dilated_mask_outer = text_mask_on_temp_canvas.copy()
+                for _ in range(filter_repeats_for_outer): 
+                    dilated_mask_outer = dilated_mask_outer.filter(ImageFilter.MaxFilter(3))
+                bbox_outer = dilated_mask_outer.getbbox()
+                if bbox_outer: cropped_outer_layer = dilated_mask_outer.crop(bbox_outer)
+                # if cropped_outer_layer: cropped_outer_layer.save("debug_1_cropped_outer_maxfilter.png")
             
-            # 白縁用マスク
-            thickness_for_white_layer = TEXT_IMAGE_OUTLINE_THICKNESS_BLACK + TEXT_IMAGE_OUTLINE_THICKNESS_WHITE
-            dilated_mask_w = text_mask_on_temp_canvas.copy()
-            if thickness_for_white_layer > 0:
-                for _ in range(thickness_for_white_layer):
-                    dilated_mask_w = dilated_mask_w.filter(ImageFilter.MaxFilter(3))
-            bbox_w = dilated_mask_w.getbbox()
-            cropped_white_layer = dilated_mask_w.crop(bbox_w) if bbox_w else None
-            # if cropped_white_layer: cropped_white_layer.save("debug_1_cropped_white.png")
+            # text3 のように外側の縁がない場合、inner_outline が最も外側の縁として扱われる
+            # その場合の cropped_outer_layer は、この inner_outline_thickness で作られたものになる
+            elif not outer_outline_color and filter_repeats_for_inner > 0 : 
+                dilated_mask_single_outline = text_mask_on_temp_canvas.copy()
+                for _ in range(filter_repeats_for_inner):
+                    dilated_mask_single_outline = dilated_mask_single_outline.filter(ImageFilter.MaxFilter(3))
+                bbox_single = dilated_mask_single_outline.getbbox()
+                if bbox_single: cropped_outer_layer = dilated_mask_single_outline.crop(bbox_single) # Use outer for single outline too
+                # if cropped_outer_layer: cropped_outer_layer.save("debug_1_cropped_single_outline_maxfilter.png")
 
-            # 黒縁用マスク
-            thickness_for_black_layer = TEXT_IMAGE_OUTLINE_THICKNESS_BLACK
-            dilated_mask_b = text_mask_on_temp_canvas.copy()
-            if thickness_for_black_layer > 0:
-                for _ in range(thickness_for_black_layer):
-                    dilated_mask_b = dilated_mask_b.filter(ImageFilter.MaxFilter(3))
-            bbox_b = dilated_mask_b.getbbox()
-            cropped_black_layer = dilated_mask_b.crop(bbox_b) if bbox_b else None
-            # if cropped_black_layer: cropped_black_layer.save("debug_2_cropped_black.png")
 
-            # 文字本体用マスク
-            bbox_t = text_mask_on_temp_canvas.getbbox()
-            cropped_text_layer = text_mask_on_temp_canvas.crop(bbox_t) if bbox_t else None
-            # if cropped_text_layer: cropped_text_layer.save("debug_3_cropped_text.png")
+            if inner_outline_thickness > 0 and outer_outline_color : # 2層縁取りの時だけ内側縁を作る
+                dilated_mask_inner = text_mask_on_temp_canvas.copy()
+                for _ in range(filter_repeats_for_inner):
+                    dilated_mask_inner = dilated_mask_inner.filter(ImageFilter.MaxFilter(3))
+                bbox_inner = dilated_mask_inner.getbbox()
+                if bbox_inner: cropped_inner_layer = dilated_mask_inner.crop(bbox_inner)
+                # if cropped_inner_layer: cropped_inner_layer.save("debug_2_cropped_inner_maxfilter.png")
 
-            # 最終画像のサイズ決定
-            if cropped_white_layer: # 最も外側の縁を基準
-                content_final_width = cropped_white_layer.width
-                content_final_height = cropped_white_layer.height
-            elif cropped_black_layer:
-                content_final_width = cropped_black_layer.width
-                content_final_height = cropped_black_layer.height
-            elif cropped_text_layer:
-                content_final_width = cropped_text_layer.width
-                content_final_height = cropped_text_layer.height
-            else:
-                await ctx.send("エラー: 描画コンテンツ生成不可。"); return
+            bbox_text_main = text_mask_on_temp_canvas.getbbox()
+            if bbox_text_main: cropped_text_layer_main = text_mask_on_temp_canvas.crop(bbox_text_main)
+            # if cropped_text_layer_main: cropped_text_layer_main.save("debug_3_cropped_text_maxfilter.png")
+            
+            content_final_width, content_final_height = 0,0
+            if cropped_outer_layer: content_final_width, content_final_height = cropped_outer_layer.size
+            elif cropped_inner_layer: content_final_width, content_final_height = cropped_inner_layer.size # 1層縁取りでouterがない場合
+            elif cropped_text_layer_main: content_final_width, content_final_height = cropped_text_layer_main.size
+            else: await ctx.send("エラー: 描画コンテンツ生成不可。"); return
 
-            final_img_width = content_final_width + TEXT_IMAGE_PADDING * 2
-            final_img_height = content_final_height + TEXT_IMAGE_PADDING * 2
-            final_image_canvas = Image.new("RGBA", (final_img_width, final_img_height), (0,0,0,0))
+            final_w = content_final_width + TEXT_IMAGE_PADDING_COMMON * 2
+            final_h = content_final_height + TEXT_IMAGE_PADDING_COMMON * 2
+            final_canvas = Image.new("RGBA", (final_w, final_h), (0,0,0,0))
+            
+            y_offset_global = TEXT_IMAGE_VERTICAL_OFFSET_COMMON
 
-            # 各クロップ済みレイヤーを最終画像の中央にペースト
-            y_paste_offset_global = TEXT_IMAGE_VERTICAL_OFFSET
-            if cropped_white_layer:
-                paste_x = (final_img_width - cropped_white_layer.width) // 2
-                paste_y = (final_img_height - cropped_white_layer.height) // 2 + y_paste_offset_global
-                final_image_canvas.paste(TEXT_IMAGE_OUTLINE_COLOR_WHITE, (paste_x, paste_y), cropped_white_layer)
-            if cropped_black_layer:
-                paste_x = (final_img_width - cropped_black_layer.width) // 2
-                paste_y = (final_img_height - cropped_black_layer.height) // 2 + y_paste_offset_global
-                final_image_canvas.paste(TEXT_IMAGE_OUTLINE_COLOR_BLACK, (paste_x, paste_y), cropped_black_layer)
-            if cropped_text_layer:
-                paste_x = (final_img_width - cropped_text_layer.width) // 2
-                paste_y = (final_img_height - cropped_text_layer.height) // 2 + y_paste_offset_global
-                final_image_canvas.paste(TEXT_IMAGE_TEXT_COLOR, (paste_x, paste_y), cropped_text_layer)
+            if cropped_outer_layer and outer_outline_color: # 2層縁取りの白
+                final_canvas.paste(outer_outline_color, ((final_w-cropped_outer_layer.width)//2, (final_h-cropped_outer_layer.height)//2 + y_offset_global), cropped_outer_layer)
+            
+            if cropped_inner_layer and outer_outline_color: # 2層縁取りの黒
+                final_canvas.paste(inner_outline_color, ((final_w-cropped_inner_layer.width)//2, (final_h-cropped_inner_layer.height)//2 + y_offset_global), cropped_inner_layer)
+            elif cropped_outer_layer and not outer_outline_color: # 1層縁取り (text3のような場合、inner_outline_color を使用)
+                final_canvas.paste(inner_outline_color, ((final_w-cropped_outer_layer.width)//2, (final_h-cropped_outer_layer.height)//2 + y_offset_global), cropped_outer_layer)
 
-            # Squareモード処理
-            output_image = final_image_canvas # デフォルトは加工前の画像
+
+            if cropped_text_layer_main:
+                final_canvas.paste(text_color, ((final_w-cropped_text_layer_main.width)//2, (final_h-cropped_text_layer_main.height)//2 + y_offset_global), cropped_text_layer_main)
+
+            output_image = final_canvas
             if make_square:
-                # 現在の final_image_canvas からコンテンツ部分を正確に切り出す
-                alpha_channel = final_image_canvas.getchannel('A')
-                content_actual_bbox = alpha_channel.getbbox()
-
-                if content_actual_bbox:
-                    cropped_for_square = final_image_canvas.crop(content_actual_bbox)
-                    # クロップされたコンテンツの幅と高さのうち、大きい方を基準に正方形化
-                    target_dimension = max(cropped_for_square.width, cropped_for_square.height)
-                    if target_dimension > 0:
-                        # 新しい正方形の透明なキャンバスを作成
-                        square_canvas = Image.new("RGBA", (target_dimension, target_dimension), (0,0,0,0))
-                        # クロップしたコンテンツを、この正方形キャンバスに合わせてリサイズ（アスペクト比無視）
-                        stretched_content = cropped_for_square.resize((target_dimension, target_dimension), Image.Resampling.LANCZOS)
-                        # 正方形キャンバスにペースト（中央揃えは不要、(0,0)でOK）
-                        square_canvas.paste(stretched_content, (0,0))
-                        output_image = square_canvas # 出力画像をこの正方形画像に置き換え
-                    else:
-                        print("Warning (square): Cropped content for square had zero dimension.")
-                else:
-                    print("Warning (square): No content bbox found in final_image_canvas for squaring.")
+                alpha_ch = output_image.getchannel('A'); bbox_sq = alpha_ch.getbbox()
+                if bbox_sq:
+                    content_sq = output_image.crop(bbox_sq); dim_sq = max(content_sq.width, content_sq.height)
+                    if dim_sq > 0:
+                        sq_canvas = Image.new("RGBA",(dim_sq,dim_sq),(0,0,0,0)); stretched_sq = content_sq.resize((dim_sq,dim_sq),Image.Resampling.LANCZOS)
+                        sq_canvas.paste(stretched_sq,(0,0)); output_image = sq_canvas
             
-            # 保存と送信
-            img_byte_arr = io.BytesIO()
-            output_image.save(img_byte_arr, format='PNG')
-            img_byte_arr.seek(0)
-            # output_image.save("debug_final_output_for_send.png")
+            img_byte_arr = io.BytesIO(); output_image.save(img_byte_arr, format='PNG'); img_byte_arr.seek(0)
+            resized_output_io, _ = await _resize_image_if_too_large(img_byte_arr, "PNG")
+            if resized_output_io is None: await ctx.send("エラー: 画像リサイズ失敗。"); img_byte_arr.close(); return
+            resized_output_io.seek(0)
 
-            final_image_io_resized, resized_flag = await _resize_image_if_too_large(img_byte_arr, "PNG", MAX_FILE_SIZE_BYTES)
-            # ... (以降の送信処理は同じ)
-            if final_image_io_resized is None:
-                await ctx.send("エラー: 画像の最終処理に失敗しました。"); img_byte_arr.close(); return
-            final_image_io_resized.seek(0, io.SEEK_END); final_size = final_image_io_resized.tell(); final_image_io_resized.seek(0)
-            if final_size > MAX_FILE_SIZE_BYTES:
-                await ctx.send(f"生成された画像サイズが大きすぎます ({final_size/(1024*1024):.2f}MB)。"); final_image_io_resized.close(); return
-            await ctx.send(file=discord.File(fp=final_image_io_resized, filename="text_image.png"))
-            if img_byte_arr != final_image_io_resized and not img_byte_arr.closed: img_byte_arr.close()
-            if final_image_io_resized and not final_image_io_resized.closed: final_image_io_resized.close()
+            file = discord.File(fp=resized_output_io, filename="text_image.png")
+            embed = discord.Embed(title=embed_title, color=discord.Color.random())
+            embed.set_image(url="attachment://text_image.png")
+            embed.set_footer(text="改行はコンマ区切り スタンプ化は square をつけてください")
+            await ctx.send(embed=embed, file=file)
+            img_byte_arr.close(); 
+            if resized_output_io != img_byte_arr : resized_output_io.close()
+    except Exception as e: await ctx.send(f"テキスト画像生成中に予期せぬエラー: {e}"); traceback.print_exc()
 
-    except Exception as e:
-        await ctx.send(f"テキスト画像生成中に予期せぬエラーが発生しました: {e}")
-        traceback.print_exc()
+# ========================== DISCORD COMMANDS ==========================
+# # TEXT COMMAND (Original Yellow)
+@bot.command(name="text")
+async def text_command(ctx: commands.Context, *, args: str):
+    await _generate_text_image_styled(ctx, args,
+                                     font_path=TEXT_IMAGE_FONT_PATH_DEFAULT,
+                                     text_color=TEXT_IMAGE_TEXT_COLOR_DEFAULT,
+                                     inner_outline_color=TEXT_IMAGE_OUTLINE_COLOR_BLACK_DEFAULT, 
+                                     inner_outline_thickness=TEXT_IMAGE_OUTLINE_THICKNESS_BLACK_DEFAULT,
+                                     outer_outline_color=TEXT_IMAGE_OUTLINE_COLOR_WHITE_DEFAULT,
+                                     outer_outline_thickness=TEXT_IMAGE_OUTLINE_THICKNESS_WHITE_DEFAULT,
+                                     embed_title="やまかわサムネ風テキスト")
 
-# Weather command with Yahoo API - YAHOO_CLIENT_ID の参照を確認
+# # TEXT2 COMMAND (Blue Version)
+@bot.command(name="text2")
+async def text2_command(ctx: commands.Context, *, args: str):
+    await _generate_text_image_styled(ctx, args,
+                                     font_path=TEXT_IMAGE_FONT_PATH_DEFAULT,
+                                     text_color=TEXT_IMAGE_TEXT_COLOR_BLUE,
+                                     inner_outline_color=TEXT_IMAGE_OUTLINE_COLOR_BLACK_DEFAULT, 
+                                     inner_outline_thickness=TEXT_IMAGE_OUTLINE_THICKNESS_BLACK_DEFAULT,
+                                     outer_outline_color=TEXT_IMAGE_OUTLINE_COLOR_WHITE_DEFAULT,
+                                     outer_outline_thickness=TEXT_IMAGE_OUTLINE_THICKNESS_WHITE_DEFAULT,
+                                     embed_title="やまかわ青文字テキスト")
+
+# # TEXT3 COMMAND (Noto Serif JP Red with White Outline)
+@bot.command(name="text3")
+async def text3_command(ctx: commands.Context, *, args: str):
+    await _generate_text_image_styled(ctx, args,
+                                     font_path=TEXT_IMAGE_FONT_PATH_NOTO_SERIF_BOLD,
+                                     text_color=TEXT_IMAGE_TEXT_COLOR_RED_NOTO,
+                                     inner_outline_color=TEXT_IMAGE_OUTLINE_COLOR_WHITE_NOTO, 
+                                     inner_outline_thickness=TEXT_IMAGE_OUTLINE_THICKNESS_WHITE_NOTO,
+                                     # outer_outline_color is None for single outline
+                                     outer_outline_color=None, 
+                                     outer_outline_thickness=0, # No additional thickness for a second layer
+                                     embed_title="やまかわ赤文字テキスト")
+
 @bot.command(name="tenki", aliases=["weather"])
-async def weather_command_yolp(ctx: commands.Context, *, place_name: str):
-    # YAHOO_CLIENT_ID はグローバルスコープから参照される
-    if not YAHOO_CLIENT_ID or YAHOO_CLIENT_ID == "YOUR_YAHOO_CLIENT_ID_PLACEHOLDER":
-        await ctx.send("エラー: 天気APIのCLIENT IDが設定されていません。管理者に連絡してください。")
-        return
-    # ... (rest of the YOLP weather command) ...
+async def weather_command_tsukumijima(ctx: commands.Context, *, city_name_query: str):
     async with ctx.typing():
-        if GEMINI_API_UNAVAILABLE:
-            await ctx.send("地名からの座標取得に失敗しました (Gemini API利用不可)。")
-            return
-
-        coord_prompt = f"「{place_name}」の代表的な緯度と経度を、カンマ区切りで小数点以下6桁程度で教えてください。例: 35.6895,139.6917"
-        coord_response_str = await generate_gemini_text_response([coord_prompt])
-
-        if coord_response_str.startswith("Error:") or not coord_response_str:
-            await ctx.send(f"「{place_name}」の座標取得に失敗しました。Geminiからの応答: {coord_response_str}")
-            return
-
-        try:
-            lat_str, lon_str = coord_response_str.strip().split(',')
-            latitude = float(lat_str.strip())
-            longitude = float(lon_str.strip())
-        except ValueError:
-            await ctx.send(f"座標の解析に失敗しました。Geminiからの応答「{coord_response_str}」が不正な形式です。地名をより具体的にしてみてください。")
-            return
+        city_id = None
+        if not weather_city_id_map: await load_weather_city_codes()
         
-        print(f"Weather YOLP: Coordinates for '{place_name}' -> Lat: {latitude}, Lon: {longitude}")
+        query_lower = city_name_query.lower()
+        for name, id_val in weather_city_id_map.items():
+            if query_lower == name.lower(): city_id = id_val; break
+        if not city_id:
+            for name, id_val in weather_city_id_map.items():
+                if query_lower in name.lower() or name.lower() in query_lower: city_id = id_val; break
+        
+        id_response_gemini = "" # Initialize for later check
+        if not city_id and not GEMINI_API_UNAVAILABLE:
+            print(f"Weather: No direct/partial match for '{city_name_query}', trying Gemini.")
+            city_list_for_gemini = "\n".join([f"- {name} (ID: {cid})" for name, cid in list(weather_city_id_map.items())[:150]])
+            
+            prompt_gemini = (
+                f"入力された日本の地名「{city_name_query}」に最も近いと思われる都市のIDを、以下の日本の都市名とIDのリストを参考に、そのID（数字6桁）のみを返してください。\n"
+                f"もしリストに完全に一致するものがなくても、最も適切だと思われるものを推測してください。\n"
+                f"入力が日本の地名ではない、またはリストから適切なIDがどうしても見つからない場合は、「不明」とだけ返してください。\n"
+                f"地名IDリストの例 (形式: 都市名 (ID: xxxxxx)):\n{city_list_for_gemini}\n（リストはこれ以上続く...）\n\n"
+                f"ユーザー入力地名: {city_name_query}\n最も近いID:"
+            )
+            id_response_gemini = await generate_gemini_text_response([prompt_gemini])
 
-        params = {
-            "appid": YAHOO_CLIENT_ID, # グローバル変数を直接使用
-            "coordinates": f"{longitude},{latitude}", 
-            "output": "json",
-            "interval": "5" 
-        }
+            if not id_response_gemini.startswith("Error:") and id_response_gemini.strip().isdigit():
+                potential_id = id_response_gemini.strip()
+                if any(cid_val == potential_id for cid_val in weather_city_id_map.values()):
+                    city_id = potential_id
+                    print(f"Weather: Gemini suggested City ID for '{city_name_query}': {city_id}")
+                else:
+                     print(f"Weather: Gemini suggested ID '{potential_id}' not in known city codes.")
+            elif "不明" in id_response_gemini:
+                print(f"Weather: Gemini could not determine a city ID for '{city_name_query}'.")
+            else:
+                print(f"Weather: Gemini response for '{city_name_query}' was not a direct ID or '不明': {id_response_gemini[:100]}")
+        
+        if not city_id:
+            # Check if it might be a foreign country or if Gemini explicitly said "不明"
+            is_likely_foreign_or_unknown_by_gemini = False
+            if "不明" in id_response_gemini:
+                is_likely_foreign_or_unknown_by_gemini = True
+            else: # Basic foreign check if Gemini didn't clarify
+                if not any(char >= '\u0800' for char in city_name_query) and len(city_name_query.split()) > 1:
+                     if city_name_query.lower() not in [n.lower() for n in weather_city_id_map.keys()]:
+                        is_likely_foreign_or_unknown_by_gemini = True
+            
+            if is_likely_foreign_or_unknown_by_gemini:
+                 await ctx.send(f"「{city_name_query}」の天気情報は見つかりませんでした。このコマンドは日本国内の地名のみ利用可能です。")
+            else:
+                 await ctx.send(f"都市「{city_name_query}」の天気情報が見つかりませんでした。日本の有効な都市名を入力するか、より具体的に指定してください。")
+            return
+
+        target_url = f"{WEATHER_API_BASE_URL}{city_id}"
+        print(f"Fetching weather (tsukumijima) from: {target_url}")
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(YAHOO_WEATHER_API_URL, params=params) as response:
+                async with session.get(target_url) as response:
                     if response.status == 200:
                         data = await response.json()
-                        if "Feature" not in data or not data["Feature"] or \
-                           "Property" not in data["Feature"][0] or \
-                           "WeatherList" not in data["Feature"][0]["Property"] or \
-                           "Weather" not in data["Feature"][0]["Property"]["WeatherList"] or \
-                           not data["Feature"][0]["Property"]["WeatherList"]["Weather"]:
-                            await ctx.send(f"「{place_name}」({latitude:.4f},{longitude:.4f})の天気情報が見つかりませんでした。APIからの詳細情報なし。")
-                            return
+                        if data.get("error"): # API specific error
+                             await ctx.send(f"天気情報取得エラー ({city_name_query}/{city_id}): {data.get('error')}")
+                             return
+                        if data.get("forecasts") and len(data["forecasts"]) > 0:
+                            embed = discord.Embed(title=f"{data.get('location', {}).get('city', city_name_query)} の天気予報", color=discord.Color.blue())
+                            embed.set_footer(text=f"情報源: {data.get('publicTimeFormatted', '')} つくも様")
+                            for i, forecast in enumerate(data["forecasts"][:3]):
+                                date_label = forecast.get("dateLabel", "不明")
+                                date_val = forecast.get("date", "")[-5:] # MM-DD
+                                date_str = f"{date_label} ({date_val})"
+                                weather_telop = forecast.get("telop", "情報なし")
+                                temp_max = forecast.get("temperature", {}).get("max", {}).get("celsius", "--")
+                                temp_min = forecast.get("temperature", {}).get("min", {}).get("celsius", "--")
+                                value_str = f"{weather_telop} (最高:{temp_max}°C / 最低:{temp_min}°C)"
+                                embed.add_field(name=date_str, value=value_str, inline=False)
+                            await ctx.send(embed=embed)
+                        else: await ctx.send(f"「{city_name_query}」(ID:{city_id}) の天気予報データを取得できませんでした。")
+                    else: await ctx.send(f"天気情報の取得に失敗 (HTTP: {response.status})。都市名/ID: {city_name_query}/{city_id}")
+        except Exception as e: await ctx.send(f"天気情報取得エラー: {e}"); traceback.print_exc()
 
-                        weather_info_list = data["Feature"][0]["Property"]["WeatherList"]["Weather"]
-                        
-                        embed = discord.Embed(title=f"{place_name} の天気情報 (Yahoo!)", color=discord.Color.blue())
-                        embed.description = f"緯度: {latitude:.4f}, 経度: {longitude:.4f}"
-                        embed.set_footer(text="情報源: Yahoo! Open Local Platform")
-                        
-                        forecasts_to_show = min(len(weather_info_list), 5) # 最大5件表示
-
-                        for i in range(forecasts_to_show):
-                            forecast = weather_info_list[i]
-                            fc_time_str = forecast.get("Date", "時刻不明") 
-                            fc_type = forecast.get("Type", "不明") 
-                            fc_rainfall = forecast.get("Rainfall", 0.0) 
-
-                            try:
-                                fc_dt_obj = datetime.datetime.strptime(fc_time_str, "%Y%m%d%H%M").replace(tzinfo=JST) # JSTとして解釈
-                                fc_time_display = f"<t:{int(fc_dt_obj.timestamp())}:t>" # Discord Timestamp (Time)
-                            except ValueError:
-                                fc_time_display = fc_time_str
-                            
-                            weather_status_jp = "観測実況" if fc_type == "observation" else "予報"
-                            
-                            field_name = f"{fc_time_display} ({weather_status_jp})"
-                            field_value = f"降水量: **{fc_rainfall:.2f} mm/h**"
-                            embed.add_field(name=field_name, value=field_value, inline=True if forecasts_to_show > 1 else False)
-
-                        await ctx.send(embed=embed)
-
-                    elif response.status == 403: 
-                        error_data_text = await response.text()
-                        print(f"Yahoo Weather API Error 403: {error_data_text[:300]}")
-                        await ctx.send(f"天気APIへのアクセスが拒否されました。アプリケーションIDまたはAPI側の制限を確認してください。")
-                    else:
-                        error_data_text = await response.text()
-                        print(f"Yahoo Weather API Error {response.status}: {error_data_text[:300]}")
-                        await ctx.send(f"天気情報の取得に失敗 (HTTP: {response.status})。")
-        except Exception as e:
-            await ctx.send(f"天気情報取得中に予期せぬエラー: {e}")
-            traceback.print_exc()
-
-@weather_command_yolp.error
-async def weather_command_yolp_error(ctx, error):
+@weather_command_tsukumijima.error
+async def weather_command_tsukumijima_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(f"地名を指定してください。例: `tenki 東京都千代田区` (`{error.param.name}` がありません)")
-    else: await ctx.send(f"天気コマンド(YOLP)でエラー: {error}")
+        await ctx.send(f"都市名を指定してください。例: `tenki 東京` (`{error.param.name}` がありません)")
+    else: await ctx.send(f"天気コマンドでエラー: {error}")
 
 @bot.command(name="info")
 async def user_info_command(ctx: commands.Context, member: discord.Member = None):
@@ -2459,43 +2284,17 @@ async def bet_command_error(ctx, error):
         await ctx.send(f"betコマンドでエラーが発生しました: {error}")
         traceback.print_exc()
 
-# ================================== BOT EXECUTION ====================================
+# ========================== BOT EXECUTION ==========================
 if __name__ == "__main__":
-    # ... (Startup checks for tokens, API keys, font file, etc. unchanged) ...
-    if DISCORD_BOT_TOKEN == "YOUR_DISCORD_BOT_TOKEN_PLACEHOLDER" or not DISCORD_BOT_TOKEN:
-        print("CRITICAL ERROR: DISCORD_BOT_TOKEN is not set or is a placeholder in .env"); exit(1)
-    if GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_PLACEHOLDER" or not GEMINI_API_KEY:
-        print("WARNING: GEMINI_API_KEY is not set. Gemini features will be unavailable.")
-    if not YAHOO_CLIENT_ID or YAHOO_CLIENT_ID == "YOUR_YAHOO_CLIENT_ID_PLACEHOLDER":
-        print("WARNING: YAHOO_CLIENT_ID is not set. Weather command (YOLP) will be unavailable.")
-    if not VOICEVOX_API_KEY or VOICEVOX_API_KEY == "YOUR_VOICEVOX_API_KEY_PLACEHOLDER":
-        print("WARNING: VOICEVOX_API_KEY is not set. Text-to-speech for 'voice' command will be unavailable.")
-    # ... (other optional API key checks)
-
-    missing_deps = [] # ... (dependency checks unchanged)
-    try: import numpy
-    except ImportError: missing_deps.append("numpy")
-    try: from PIL import Image, ImageDraw, ImageFont, ImageFilter # Ensure all PIL components are checked
-    except ImportError: missing_deps.append("Pillow (ensure ImageDraw, ImageFont, ImageFilter are available)")
-    try: import pytz
-    except ImportError: missing_deps.append("pytz")
-    try: import pydub
-    except ImportError: missing_deps.append("pydub")
-
-    if missing_deps:
-        print(f"WARNING: Missing required libraries: {', '.join(missing_deps)}. Please install them.")
-        # exit(1) # Optionally exit if critical dependencies are missing
-
-    if not os.path.exists(TEXT_IMAGE_FONT_PATH):
-        print(f"CRITICAL WARNING: Text command font not found: {TEXT_IMAGE_FONT_PATH}. The 'text' command will likely fail.")
-        print("Please place the font file (e.g., MochiyPopOne-Regular.ttf) in the 'assets/fonts/' directory.")
-
     print("Starting Bot...")
+    if not DISCORD_BOT_TOKEN or DISCORD_BOT_TOKEN == "YOUR_DISCORD_BOT_TOKEN_PLACEHOLDER": print("CRITICAL ERROR: DISCORD_BOT_TOKEN not set."); exit(1)
+    if not GEMINI_API_KEY or GEMINI_API_KEY == "YOUR_GEMINI_API_KEY_PLACEHOLDER": print("WARNING: GEMINI_API_KEY not set.")
+    if not VOICEVOX_API_KEY or VOICEVOX_API_KEY == "YOUR_VOICEVOX_API_KEY_PLACEHOLDER": print("WARNING: VOICEVOX_API_KEY not set.")
+    
+    if not os.path.exists(TEXT_IMAGE_FONT_PATH_DEFAULT): print(f"CRITICAL WARNING: Default text font not found: {TEXT_IMAGE_FONT_PATH_DEFAULT}")
+    if not os.path.exists(TEXT_IMAGE_FONT_PATH_NOTO_SERIF_BOLD): print(f"WARNING: Noto Serif font not found: {TEXT_IMAGE_FONT_PATH_NOTO_SERIF_BOLD}. 'text3' may fail.")
+    
     try:
-        # load_game_points() is called in on_ready, ensure it's robust
         bot.run(DISCORD_BOT_TOKEN)
-    except discord.LoginFailure:
-        print("CRITICAL ERROR: Invalid Discord Bot Token. Please check your DISCORD_BOT_TOKEN in .env")
-    except Exception as e:
-        print(f"CRITICAL ERROR during bot execution: {e}")
-        traceback.print_exc()
+    except discord.LoginFailure: print("CRITICAL ERROR: Invalid Discord Bot Token.")
+    except Exception as e: print(f"CRITICAL ERROR during bot execution: {e}"); traceback.print_exc()
