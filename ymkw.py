@@ -114,7 +114,7 @@ BET_DICE_PAYOUTS = {
 CONNECTFOUR_MARKERS = MARKERS[1:8]
 CF_EMPTY, CF_P1_TOKEN, CF_P2_TOKEN = "<:4_0:1395065436114128937>", "<:4_1:1395065453675544586>", "<:4_2:1395065472491323493>"
 ROWS, COLS = 6, 7
-CONNECTFOUR_WIN_POINTS, CONNECTFOUR_LOSE_POINTS, CONNECTFOUR_DRAW_POINTS = 15, -10, 5
+CONNECTFOUR_WIN_POINTS, CONNECTFOUR_LOSE_POINTS, CONNECTFOUR_DRAW_POINTS = 30, -20, 10
 active_connectfour_games = {}
 # High & Low
 active_highlow_games = {}
@@ -696,7 +696,7 @@ def _check_win_for_logic(board, token):
     return False
 
 def get_connectfour_bot_move(game: ConnectFourGame) -> int:
-    """コネクトフォーのBotの思考ロジック (最終確定版)"""
+    """コネクトフォーのBotの思考ロジック (最終確定・改訂3版)"""
     valid_cols = [c for c in range(COLS) if game.board[0][c] == CF_EMPTY]
     if not valid_cols:
         return -1
@@ -705,30 +705,32 @@ def get_connectfour_bot_move(game: ConnectFourGame) -> int:
     opponent_token = CF_P1_TOKEN if my_token == CF_P2_TOKEN else CF_P2_TOKEN
 
     # --- AIの思考ロジック ---
-    def check_potential_win(token):
-        """指定されたトークンが、次に置けば勝てる列を探す"""
+    def find_winning_move(token):
+        """指定されたトークンが、次に置けば勝てる列を探す。なければNoneを返す。"""
         for col in valid_cols:
             temp_board = [row[:] for row in game.board]
+            
             row_to_place = -1
             for r in range(ROWS - 1, -1, -1):
                 if temp_board[r][col] == CF_EMPTY:
+                    temp_board[r][col] = token
                     row_to_place = r
                     break
             
-            if row_to_place != -1:
-                temp_board[row_to_place][col] = token
-                if _check_win_for_logic(temp_board, token): 
-                    return col
+            if _check_win_for_logic(temp_board, token):
+                return col
         return None
 
-    win_move = check_potential_win(my_token)
+    # --- 思考の優先順位 ---
+
+    win_move = find_winning_move(my_token)
     if win_move is not None:
         return win_move
 
-    block_move = check_potential_win(opponent_token)
+    block_move = find_winning_move(opponent_token)
     if block_move is not None:
         return block_move
-    
+
     preferred_order = [3, 4, 2, 5, 1, 6, 0]
     for col in preferred_order:
         if col in valid_cols:
