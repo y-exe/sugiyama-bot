@@ -678,12 +678,25 @@ async def connectfour_afk_timeout(game: ConnectFourGame):
                 await send_connectfour_result_message(channel, game, message, "afk")
             except (discord.NotFound, discord.HTTPException) as e: print(f"CF AFK Timeout: Error handling message: {e}")
 
-def _check_win_for_logic(board, token, col, rows, cols):
-    """【廃止予定】この関数は新しいAIでは使いませんが、互換性のために残します。"""
+def _check_win_for_logic(board, token):
+    """Botの思考ロジック内で使うための、シンプルで確実な勝利判定"""
+    if token == CF_EMPTY: return False
+    for r in range(ROWS):
+        for c in range(COLS - 3):
+            if all(board[r][c+i] == token for i in range(4)): return True
+    for r in range(ROWS - 3):
+        for c in range(COLS):
+            if all(board[r+i][c] == token for i in range(4)): return True
+    for r in range(ROWS - 3):
+        for c in range(COLS - 3):
+            if all(board[r+i][c+i] == token for i in range(4)): return True
+    for r in range(3, ROWS):
+        for c in range(COLS - 3):
+            if all(board[r-i][c+i] == token for i in range(4)): return True
     return False
 
 def get_connectfour_bot_move(game: ConnectFourGame) -> int:
-    """コネクトフォーのBotの思考ロジック (最終改訂版)"""
+    """コネクトフォーのBotの思考ロジック (最終確定版)"""
     valid_cols = [c for c in range(COLS) if game.board[0][c] == CF_EMPTY]
     if not valid_cols:
         return -1
@@ -691,93 +704,31 @@ def get_connectfour_bot_move(game: ConnectFourGame) -> int:
     my_token = game.current_player_token
     opponent_token = CF_P1_TOKEN if my_token == CF_P2_TOKEN else CF_P2_TOKEN
 
-    def check_move(token_to_check):
-        """指定されたトークンが、次にどこかに置けば勝てる手を探す"""
+    # --- AIの思考ロジック ---
+    def check_potential_win(token):
+        """指定されたトークンが、次に置けば勝てる列を探す"""
         for col in valid_cols:
-            # 仮想の盤面を作成
             temp_board = [row[:] for row in game.board]
-            
-            # その列にコマを落とす
-            row = -1
+            row_to_place = -1
             for r in range(ROWS - 1, -1, -1):
                 if temp_board[r][col] == CF_EMPTY:
-                    temp_board[r][col] = token_to_check
-                    row = r
+                    row_to_place = r
                     break
-            if row == -1: continue
-
-            for c in range(COLS - 3):
-                if all(temp_board[row][c+i] == token_to_check for i in range(4)): return col
-            if row <= ROWS - 4:
-                if all(temp_board[row+i][col] == token_to_check for i in range(4)): return col
-            for i in range(4):
-                start_r, start_c = row - i, col - i
-                if 0 <= start_r <= ROWS - 4 and 0 <= start_c <= cols - 4:
-                    if all(temp_board[start_r+j][start_c+j] == token_to_check for j in range(4)): return col
-            for i in range(4):
-                start_r, start_c = row + i, col - i
-                if 3 <= start_r < ROWS and 0 <= start_c <= cols - 4:
-                    if all(temp_board[start_r-j][start_c+j] == token_to_check for j in range(4)): return col
+            
+            if row_to_place != -1:
+                temp_board[row_to_place][col] = token
+                if _check_win_for_logic(temp_board, token): 
+                    return col
         return None
 
-    win_move = check_move(my_token)
+    win_move = check_potential_win(my_token)
     if win_move is not None:
         return win_move
 
-    block_move = check_move(opponent_token)
+    block_move = check_potential_win(opponent_token)
     if block_move is not None:
         return block_move
-
-    preferred_order = [3, 4, 2, 5, 1, 6, 0]
-    for col in preferred_order:
-        if col in valid_cols:
-            return col
-            
-    return random.choice(valid_cols)
-
-
-def get_connectfour_bot_move(game: ConnectFourGame) -> int:
-    """コネクトフォーのBotの思考ロジック (斜め判定強化版)"""
-    valid_cols = [c for c in range(COLS) if game.board[0][c] == CF_EMPTY]
-    if not valid_cols:
-        return -1
-
-    my_token = game.current_player_token
-    opponent_token = CF_P1_TOKEN if my_token == CF_P2_TOKEN else CF_P2_TOKEN
-
-    def check_move(token_to_check):
-        """指定されたトークンが、次にどこかに置けば勝てる手を探す"""
-        for col in valid_cols:
-            temp_board = [row[:] for row in game.board]
-            
-            row = -1
-            for r in range(ROWS - 1, -1, -1):
-                if temp_board[r][col] == CF_EMPTY:
-                    temp_board[r][col] = token_to_check
-                    row = r
-                    break
-            if row == -1: continue
-
-            for c in range(COLS - 3):
-                if all(temp_board[row][c+i] == token_to_check for i in range(4)): return col
-            if row <= ROWS - 4:
-                if all(temp_board[row+i][col] == token_to_check for i in range(4)): return col
-            for r_start in range(ROWS - 3):
-                for c_start in range(COLS - 3):
-                    if all(temp_board[r_start+i][c_start+i] == token_to_check for i in range(4)): return col
-            for r_start in range(3, ROWS):
-                for c_start in range(COLS - 3):
-                    if all(temp_board[r_start-i][c_start+i] == token_to_check for i in range(4)): return col
-        return None
-
-    win_move = check_move(my_token)
-    if win_move is not None:
-        return win_move
-
-    block_move = check_move(opponent_token)
-    if block_move is not None:
-        return block_move
-
+    
     preferred_order = [3, 4, 2, 5, 1, 6, 0]
     for col in preferred_order:
         if col in valid_cols:
@@ -893,20 +844,34 @@ class ConnectFourRecruitmentView(discord.ui.View):
             for i in range(COLS):
                 await game_message.add_reaction(CONNECTFOUR_MARKERS[i])
         self.stop()
+
     async def trigger_bot_turn(self, message: discord.Message, game: ConnectFourGame):
-        """Botのターンを非同期で実行する (AI強化・バグ修正版)"""
+        """Botのターンを非同期で実行する"""
         await asyncio.sleep(random.uniform(0.8, 1.5))
-        bot_col = get_connectfour_bot_move(game)   
+        
+        bot_col = get_connectfour_bot_move(game)
         if bot_col != -1:
-            game.drop_token(bot_col) 
+            game.drop_token(bot_col)
             if game.check_win():
                 await send_connectfour_result_message(message.channel, game, message, "normal")
-                return     
-            if game.is_board_full():
-                await send_connectfour_result_message(message.channel, game, message, "draw")
-                return        
-            game.switch_player()       
+                return
+            game.switch_player()
+        
         await update_cf_board_and_reactions(message, game)
+
+        for i in range(COLS):
+            if game.board[0][i] == CF_EMPTY:
+                 try:
+                    found = False
+                    for r in message.reactions:
+                        if str(r.emoji) == CONNECTFOUR_MARKERS[i]:
+                            found = True
+                            break
+                    if not found:
+                        await message.add_reaction(CONNECTFOUR_MARKERS[i])
+                 except discord.HTTPException:
+                     pass
+        
     @discord.ui.button(label="承認する", style=discord.ButtonStyle.success, emoji="✅")
     async def accept_button(self, i, b):
         if (self.opponent and i.user.id != self.opponent.id) or (not self.opponent and i.user.id == self.host.id):
@@ -2274,7 +2239,7 @@ async def janken_command(ctx: commands.Context):
     except discord.HTTPException as e: print(f"Failed to send janken initial message: {e}")
 
 @janken_command.error
-async def janken_command_error(ctx, error): await help_command_error(ctx, error) # Cooldownを共通
+async def janken_command_error(ctx, error): await help_command_error(ctx, error) 
 
 # ================================== TEXT COMMANDS & HELPERS ==================================
 async def _run_waifu2x(input_path: str, output_path: str) -> bool:
