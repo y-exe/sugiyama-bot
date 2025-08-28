@@ -15,13 +15,11 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 BASE_DIR = os.path.dirname(__file__)
 
-# --- Bot & API Keys ---
 DISCORD_BOT_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 VOICEVOX_API_KEY = os.getenv("VOICEVOX_API_KEY")
 SHORTURL_API_KEY = os.getenv("SHORTURL_API_KEY")
 
-# --- API Endpoints ---
 WEATHER_API_BASE_URL = "https://weather.tsukumijima.net/api/forecast/city/"
 PRIMARY_AREA_XML_URL = "https://weather.tsukumijima.net/primary_area.xml"
 EXCHANGE_RATE_API_URL = "https://exchange-rate-api.krnk.org/api/rate"
@@ -29,17 +27,14 @@ SHORTURL_API_ENDPOINT = "https://xgd.io/V1/shorten"
 AMAZON_SHORTURL_ENDPOINT = "https://www.amazon.co.jp/associates/sitestripe/getShortUrl"
 VOICEVOX_API_BASE_URL = "https://deprecatedapis.tts.quest/v2/voicevox/audio/"
 
-# --- Bot Settings ---
 _DUMMY_PREFIX_VALUE = "!@#$%^&SUGIYAMA_BOT_DUMMY_PREFIX_XYZ_VERY_UNIQUE"
 def get_dummy_prefix(bot, message): return _DUMMY_PREFIX_VALUE
 VOICEVOX_SPEAKER_ID = 11
 
-# --- Imakita Command Settings ---
 IMAKITA_RATE_LIMIT_SECONDS = 60
 IMAKITA_RATE_LIMIT_COUNT = 5
 imakita_request_timestamps = deque()
 
-# --- File Paths & Data ---
 SETTINGS_FILE_PATH = os.path.join(BASE_DIR, "bot_settings.json")
 GAME_POINTS_FILE_PATH = os.path.join(BASE_DIR, "game_points.json")
 LOGIN_BONUS_DATA_FILE_PATH = os.path.join(BASE_DIR, "login_bonus_data.json")
@@ -52,7 +47,6 @@ JST = pytz.timezone("Asia/Tokyo")
 MAX_FILE_SIZE_BYTES = int(7.8 * 1024 * 1024)
 MIN_IMAGE_DIMENSION = 300
 
-# --- Watermark Templates ---
 TEMPLATES_BASE_PATH = os.path.join(BASE_DIR, "assets", "watermark_templates")
 TEMPLATES_DATA = [
     {"name": "POCO F3.png", "user_ratio_str": "3/4", "target_size": (3000, 4000)},
@@ -94,12 +88,11 @@ for t_data in TEMPLATES_DATA:
             print(f"Template ratio error: {t_data['name']} - {e}")
             t_data['match_ratio_wh'] = 1.0
 
-# --- Game & Emoji Settings ---
 GREEN_SQUARE = "<:o0:1387735237173182544>"
 BLACK_STONE = "<:o2:1387735312129593445>"
 WHITE_STONE = "<:o1:1387735281775411220>"
 MARKERS = ["<:0_o:1387735948812488734>","<:1_o:1387735961374560368>","<:2_o:1387735974582423663>","<:3_o:1387735988629147710>","<:4_o:1387736001157398568>","<:5_o:1387736014591758367>","<:6_o:1387736028684750868>","<:7_o:1387736046099501077>","<:8_o:1387736058783072266>","<:9_o:1387736070518603776>","<:o_A:1380638761288859820>","<:o_B:1380638762941419722>","<:o_C:1380638764782850080>","<:o_D:1380638769216225321>","<:o_E:1380638771178897559>","<:o_F:1380638773926301726>","<:o_G:1380638776103010365>","<:o_H:1380643990784966898>","<:o_I:1380644006093918248>","<:o_J:1380644004181577849>","<:o_K:1380644001652281374>","<:o_L:1380643998841966612>","<:o_M:1380643995855622254>","<:o_N:1380643993431314432>","🇴","🇵","🇶","🇷","🇸","🇹","🇺","🇻","🇼","🇽","🇾","🇿"]
-active_games = {} # Othello
+active_games = {}
 OTHELLO_AFK_TIMEOUT_SECONDS = 180
 active_janken_games = {}
 HAND_EMOJIS = {"rock": "✊", "scissors": "✌️", "paper": "✋"}
@@ -110,15 +103,12 @@ BET_DICE_PAYOUTS = {
     3: ("小吉。賭け金の半分を失いました。", -0.5), 4: ("吉！賭け金はそのまま戻ってきます。", 0.0),
     5: ("中吉！賭け金が1.5倍になりました。", 0.5), 6: ("大吉！おめでとうございます！賭け金が2倍になりました！", 1.0)
 }
-# Connect Four
 CONNECTFOUR_MARKERS = MARKERS[1:8]
 CF_EMPTY, CF_P1_TOKEN, CF_P2_TOKEN = "<:4_0:1395065436114128937>", "<:4_1:1395065453675544586>", "<:4_2:1395065472491323493>"
 ROWS, COLS = 6, 7
 CONNECTFOUR_WIN_POINTS, CONNECTFOUR_LOSE_POINTS, CONNECTFOUR_DRAW_POINTS = 30, -20, 10
 active_connectfour_games = {}
-# High & Low
 active_highlow_games = {}
-# Badge Emojis
 USER_BADGES_EMOJI = {
     'staff': '<:staff:1383251602680578111>',
     'partner': '<:partnerserver:1383251682070364210>',
@@ -137,7 +127,6 @@ USER_BADGES_EMOJI = {
     'booster': '<:booster:1383251702144176168>',
 }
 
-# --- Text Image & RVC Settings ---
 GEMINI_TEXT_MODEL_NAME = 'models/gemini-2.5-flash-lite-preview-06-17'
 RVC_PROJECT_ROOT_PATH = os.path.abspath(os.path.join(BASE_DIR, "RVC_Project"))
 RVC_MODEL_DIR_IN_PROJECT = os.path.join("assets", "weights")
@@ -147,7 +136,6 @@ RVC_FIXED_TRANSPOSE = 0
 RVC_INPUT_AUDIO_DIR, RVC_OUTPUT_AUDIO_DIR = os.path.join(BASE_DIR, "audio", "input"), os.path.join(BASE_DIR, "audio", "output")
 WAIFU2X_CAFFE_PATH = os.getenv("WAIFU2X_CAFFE_PATH")
 
-# --- Font & Color Settings ---
 TEXT_IMAGE_FONT_PATH_DEFAULT = os.path.join(BASE_DIR, "assets", "fonts", "MochiyPopOne-Regular.ttf")
 TEXT_IMAGE_FONT_PATH_NOTO_SERIF_BOLD = os.path.join(BASE_DIR, "assets", "fonts", "NotoSerifJP-Black.ttf")
 TEXT_IMAGE_FONT_SIZE_COMMON = 110
@@ -174,7 +162,6 @@ SQUARE_TEXT3_OUTLINE_THICKNESS_WHITE = 15
 SQUARE_IMAGE_SIZE = 500
 SQUARE_PADDING_FOR_OUTLINE = 15
 
-# --- Initialization ---
 gemini_text_model_instance = None
 GEMINI_API_UNAVAILABLE = False
 if GEMINI_API_KEY and GEMINI_API_KEY != "YOUR_GEMINI_API_KEY_PLACEHOLDER":
@@ -198,7 +185,6 @@ for d in [RVC_INPUT_AUDIO_DIR, RVC_OUTPUT_AUDIO_DIR, os.path.join(BASE_DIR, "ass
 
 # ========================== HELPER FUNCTIONS (Order is important!) ==========================
 
-# --- Custom Embeds & Error Helper ---
 STATUS_EMOJIS = {
     "success": "<:status_success:1389613617560682666>", "danger": "<:status_danger:1389613631968247838>",
     "info": "<:status_info:1389613655640899734>", "warning": "<:status_warning:1389613669515661394>",
@@ -232,7 +218,7 @@ async def send_error_embed(ctx, error: Exception):
     print(f"--- ERROR in command/event ---\nContext/Interaction Channel: {getattr(channel, 'name', 'N/A')}")
     traceback.print_exc()
 
-# --- Data Management (Points, Settings, etc.) ---
+
 def load_game_points():
     global game_points
     try:
@@ -255,7 +241,9 @@ def update_player_points(player_id: int, points_change: int):
     if not isinstance(player_id, int) or player_id == bot.user.id: return
     player_id_str = str(player_id)
     current_points = game_points.get(player_id_str, 0)
-    new_points = max(0, current_points + points_change)
+    
+    new_points = current_points + points_change
+    
     game_points[player_id_str] = new_points
     save_game_points()
 
@@ -279,10 +267,14 @@ def load_login_bonus_data():
     global login_bonus_data
     try:
         if os.path.exists(LOGIN_BONUS_DATA_FILE_PATH):
-            with open(LOGIN_BONUS_DATA_FILE_PATH, 'r', encoding='utf-8') as f: login_bonus_data = json.load(f)
-        else: login_bonus_data = {}; save_login_bonus_data()
+            with open(LOGIN_BONUS_DATA_FILE_PATH, 'r', encoding='utf-8') as f: 
+                login_bonus_data = json.load(f)
+        else: 
+            login_bonus_data = {}; save_login_bonus_data()
     except (json.JSONDecodeError, IOError) as e:
-        print(f"Error loading login bonus data, creating new file: {e}"); login_bonus_data = {}; save_login_bonus_data()
+        print(f"Error loading login bonus data, creating new file: {e}")
+        login_bonus_data = {}
+        save_login_bonus_data()
 
 def save_login_bonus_data():
     try:
@@ -290,9 +282,7 @@ def save_login_bonus_data():
             json.dump(login_bonus_data, f, indent=4, ensure_ascii=False)
     except IOError as e: print(f"Error saving login bonus data: {e}")
 
-# --- Game Logic & UI Classes (Othello, ConnectFour, High&Low) ---
 
-# Othello
 EMPTY = 0; BLACK = 1; WHITE = 2
 class OthelloGame:
     _next_game_id_counter = 1
@@ -345,7 +335,6 @@ class OthelloGame:
         self.winner = BLACK if bs>ws else (WHITE if ws>bs else EMPTY)
     def get_current_player_id(self): return self.players.get(self.current_player)
 
-# High & Low
 class HighLow対戦Game:
     def __init__(self, host_id, opponent_id, bet_amount, message_id):
         self.players = [host_id, opponent_id]
@@ -363,7 +352,6 @@ class HighLow対戦Game:
     def has_everyone_chosen(self):
         return all(self.choices.values())
 
-# Connect Four
 class ConnectFourGame:
     _next_game_id_counter = 1
     def __init__(self, p1_id, p2_id):
@@ -414,7 +402,6 @@ class ConnectFourGame:
         if is_full: self.game_over = True
         return is_full
 
-# --- Game Helper Functions (Moved to be before UI Classes) ---
 
 def create_othello_board_embed(game_session: dict) -> discord.Embed:
     game = game_session["game"]
@@ -571,7 +558,6 @@ async def update_reactions_for_next_turn(message: discord.Message, new_emojis: s
     except (discord.NotFound, discord.Forbidden): pass
     except Exception as e: print(f"Error updating reactions: {e}")
 
-# --- Connect Four Helper Functions ---
 def create_connectfour_embed(game: ConnectFourGame):
     p1_id = game.players.get(CF_P1_TOKEN)
     p2_id = game.players.get(CF_P2_TOKEN)
@@ -580,16 +566,12 @@ def create_connectfour_embed(game: ConnectFourGame):
     title = f"四目並べ #{game.game_id}"
     board_str = "\n".join("".join(row) for row in game.board)
     numbers_str = "".join(CONNECTFOUR_MARKERS)
-
-    description = (
-        f"{CF_P1_TOKEN} {p1_mention} vs {CF_P2_TOKEN} {p2_mention}\n\n"
-        f"{board_str}\n{numbers_str}\n\n"
-        f"ルール: テトリスのように、コマを落としたい列のリアクションを押してください。"
-    )
-
+    description = (f"{CF_P1_TOKEN} {p1_mention} vs {CF_P2_TOKEN} {p2_mention}\n\n"
+                   f"{board_str}\n{numbers_str}\n\n"
+                   f"ルール: テトリスのように、コマを落としたい列の\nリアクションを押してください。")
     embed = discord.Embed(
         title=title,
-        description=f"{CF_P1_TOKEN} {p1_mention} vs {CF_P2_TOKEN} {p2_mention}\n\n{board_str}\n{numbers_str}",
+        description=description,
         color=discord.Color.blue()
     )
     if not game.game_over:
@@ -612,57 +594,32 @@ async def send_connectfour_result_message(channel: discord.TextChannel, game: Co
     except discord.HTTPException: pass
     try: await original_message.clear_reactions()
     except discord.HTTPException: pass
-
     result_embed = create_embed(f"四目並べ #{game.game_id} 結果", "", discord.Color.gold(), "success")
-    winner_id, loser_id = None, None
-    winner_text = "🤝 引き分け！"
-
+    winner_id, loser_id, winner_text = None, None, "🤝 引き分け！"
     if game.winner:
         winner_id = game.players.get(game.winner)
         loser_id = next((pid for pid in game.players.values() if pid != winner_id), None)
-        
-        winner_mention = f"<@{winner_id}>"
-        loser_mention = f"<@{loser_id}>" if loser_id else "相手"
-
-        reason_map = {
-            "afk": f"**{loser_mention}** が時間切れのため、{game.winner} **{winner_mention}** の勝ち！",
-            "leave": f"**{loser_mention}** が離脱したため、{game.winner} **{winner_mention}** の勝ち！",
-            "normal": f"🏆 {game.winner} **{winner_mention}** の勝ち！"
-        }
+        winner_mention = f"<@{winner_id}>"; loser_mention = f"<@{loser_id}>" if loser_id else "相手"
+        reason_map = {"afk": f"**{loser_mention}** が時間切れのため、{game.winner} **{winner_mention}** の勝ち！", "leave": f"**{loser_mention}** が離脱したため、{game.winner} **{winner_mention}** の勝ち！", "normal": f"🏆 {game.winner} **{winner_mention}** の勝ち！"}
         winner_text = reason_map.get(reason_key, reason_map["normal"])
-
     result_embed.add_field(name="結果", value=winner_text, inline=False)
-    
     points_changed_text = ""
-    
     if winner_id and loser_id:
-        if winner_id != bot.user.id:
-            update_player_points(winner_id, CONNECTFOUR_WIN_POINTS)
-        if loser_id != bot.user.id:
-            update_player_points(loser_id, CONNECTFOUR_LOSE_POINTS)
-        
+        if winner_id != bot.user.id: update_player_points(winner_id, CONNECTFOUR_WIN_POINTS)
+        if loser_id != bot.user.id: update_player_points(loser_id, CONNECTFOUR_LOSE_POINTS)
         try:
-            winner_user = await bot.fetch_user(winner_id)
-            loser_user = await bot.fetch_user(loser_id)
-            
+            winner_user, loser_user = await bot.fetch_user(winner_id), await bot.fetch_user(loser_id)
             winner_pt_text = f"`{CONNECTFOUR_WIN_POINTS:+}pt`" if winner_id != bot.user.id else "`±0pt`"
             loser_pt_text = f"`{CONNECTFOUR_LOSE_POINTS:+}pt`" if loser_id != bot.user.id else "`±0pt`"
-            
             points_changed_text = f"▫️ {winner_user.name}: {winner_pt_text}\n▫️ {loser_user.name}: {loser_pt_text}"
         except discord.NotFound: pass
-
     elif not game.winner and not (bot.user.id in game.players.values()):
         p1_id, p2_id = game.players.values()
-        update_player_points(p1_id, CONNECTFOUR_DRAW_POINTS)
-        update_player_points(p2_id, CONNECTFOUR_DRAW_POINTS)
+        update_player_points(p1_id, CONNECTFOUR_DRAW_POINTS); update_player_points(p2_id, CONNECTFOUR_DRAW_POINTS)
         points_changed_text = f"▫️ 両者: `+{CONNECTFOUR_DRAW_POINTS}pt`"
-
-    if points_changed_text:
-        result_embed.add_field(name="ポイント変動", value=points_changed_text, inline=False)
-
+    if points_changed_text: result_embed.add_field(name="ポイント変動", value=points_changed_text, inline=False)
     await original_message.reply(embed=result_embed, mention_author=False)
-    if original_message.id in active_connectfour_games:
-        del active_connectfour_games[original_message.id]
+    if original_message.id in active_connectfour_games: del active_connectfour_games[original_message.id]
 
 async def connectfour_afk_timeout(game: ConnectFourGame):
     await asyncio.sleep(OTHELLO_AFK_TIMEOUT_SECONDS)
@@ -679,7 +636,6 @@ async def connectfour_afk_timeout(game: ConnectFourGame):
             except (discord.NotFound, discord.HTTPException) as e: print(f"CF AFK Timeout: Error handling message: {e}")
 
 def _check_win_for_logic(board, token):
-    """Botの思考ロジック内で使うための、シンプルで確実な勝利判定"""
     if token == CF_EMPTY: return False
     for r in range(ROWS):
         for c in range(COLS - 3):
@@ -696,105 +652,110 @@ def _check_win_for_logic(board, token):
     return False
 
 def get_connectfour_bot_move(game: ConnectFourGame) -> int:
-    """コネクトフォーのBotの思考ロジック (最終確定・改訂3版)"""
     valid_cols = [c for c in range(COLS) if game.board[0][c] == CF_EMPTY]
-    if not valid_cols:
-        return -1
-
-    my_token = game.current_player_token
-    opponent_token = CF_P1_TOKEN if my_token == CF_P2_TOKEN else CF_P2_TOKEN
-
-    # --- AIの思考ロジック ---
+    if not valid_cols: return -1
+    my_token, opponent_token = game.current_player_token, CF_P1_TOKEN if game.current_player_token == CF_P2_TOKEN else CF_P2_TOKEN
+    
     def find_winning_move(token):
-        """指定されたトークンが、次に置けば勝てる列を探す。なければNoneを返す。"""
         for col in valid_cols:
             temp_board = [row[:] for row in game.board]
-            
             row_to_place = -1
             for r in range(ROWS - 1, -1, -1):
                 if temp_board[r][col] == CF_EMPTY:
                     temp_board[r][col] = token
                     row_to_place = r
                     break
-            
-            if _check_win_for_logic(temp_board, token):
+            if row_to_place != -1 and _check_win_for_logic(temp_board, token):
                 return col
         return None
 
-    # --- 思考の優先順位 ---
-
     win_move = find_winning_move(my_token)
-    if win_move is not None:
-        return win_move
-
+    if win_move is not None: return win_move
     block_move = find_winning_move(opponent_token)
-    if block_move is not None:
-        return block_move
-
+    if block_move is not None: return block_move
     preferred_order = [3, 4, 2, 5, 1, 6, 0]
     for col in preferred_order:
-        if col in valid_cols:
-            return col
-            
+        if col in valid_cols: return col
     return random.choice(valid_cols)
 
 async def update_cf_board_and_reactions(message: discord.Message, game: ConnectFourGame):
-    """コネクトフォーの盤面を更新する（リアクションは変更しない）"""
     embed = create_connectfour_embed(game)
     await message.edit(embed=embed)
 
-# --- Game View & UI Classes (Othello, ConnectFour, High&Low) ---
-class HighLowChoiceView(discord.ui.View):
-    def __init__(self, game_id):
-        super().__init__(timeout=60.0)
-        self.game_id = game_id
-    async def interaction_check(self, interaction: discord.Interaction) -> bool:
-        game = active_highlow_games.get(self.game_id)
-        if not game or interaction.user.id not in game.players:
-            await interaction.response.send_message("このゲームの参加者ではありません。", ephemeral=True); return False
-        if game.choices[interaction.user.id] is not None:
-            await interaction.response.send_message("あなたは既に入力済みです。", ephemeral=True); return False
+class OthelloSizeSelectView(discord.ui.View):
+    def __init__(self, host: discord.Member, opponent: discord.Member | None):
+        super().__init__(timeout=180.0)
+        self.host, self.opponent, self.selected_size, self.message = host, opponent, None, None
+    async def start_recruitment(self, interaction: discord.Interaction, size: int):
+        if self.selected_size is not None: return
+        self.selected_size = size; self.stop()
+        host_points = get_player_points(self.host.id)
+        desc_text = (f"{STATUS_EMOJIS['pending']} {self.host.mention} が {self.opponent.mention} に **{size}x{size}** の対戦を申し込みました。\n\n"
+                     f"▫️ {self.opponent.mention} さんが参加する場合は **承認** ボタンを押してください。\n"
+                     f"▫️ {self.host.mention} さんが取り消す場合は **キャンセル** ボタンを押してください。") if self.opponent else (
+                     f"{STATUS_EMOJIS['pending']} {self.host.mention} (Pt: `{host_points}`) さんが **{size}x{size}** の対戦相手を募集しています。\n\n"
+                     f"▫️ 参加したい方は **承認** ボタンを押してください。\n"
+                     f"▫️ Botと対戦したい場合は **Botと対戦** ボタンを押してください。\n"
+                     f"▫️ {self.host.mention} さんが取り消す場合は **キャンセル** ボタンを押してください。")
+        embed = create_embed("オセロ対戦者募集", desc_text, discord.Color.blue(), "info")
+        view = OthelloRecruitmentView(self.host, self.opponent, size)
+        await interaction.response.edit_message(content=f"{self.opponent.mention}" if self.opponent else None, embed=embed, view=view)
+        view.message = await interaction.original_response()
+    @discord.ui.button(label="6x6", style=discord.ButtonStyle.secondary, row=0)
+    async def size_6(self, i: discord.Interaction, b: discord.ui.Button): await self.start_recruitment(i, 6)
+    @discord.ui.button(label="8x8", style=discord.ButtonStyle.primary, row=0)
+    async def size_8(self, i: discord.Interaction, b: discord.ui.Button): await self.start_recruitment(i, 8)
+    @discord.ui.button(label="10x10", style=discord.ButtonStyle.secondary, row=0)
+    async def size_10(self, i: discord.Interaction, b: discord.ui.Button): await self.start_recruitment(i, 10)
+    async def interaction_check(self, i: discord.Interaction) -> bool:
+        if i.user.id != self.host.id: await i.response.send_message("募集者のみが盤面のサイズを選択できます。", ephemeral=True); return False
         return True
-    async def handle_choice(self, interaction: discord.Interaction, choice: str):
-        game = active_highlow_games.get(self.game_id)
-        if not game: return
-        game.choices[interaction.user.id] = choice
-        await interaction.response.send_message(f"あなたは「{choice.upper()}」を選びました。相手の選択を待っています...", ephemeral=True)
-        if game.has_everyone_chosen():
-            original_message = interaction.message
-            await self.process_results(original_message, game)
-            for item in self.children: item.disabled = True
-            await original_message.edit(view=self); self.stop()
-    async def process_results(self, message: discord.Message, game):
-        host_id, opponent_id = game.players
-        host_choice, opp_choice = game.choices[host_id], game.choices[opponent_id]
-        new_card = random.randint(1, 13)
-        while new_card == game.current_card: new_card = random.randint(1, 13)
-        host_correct = (host_choice == 'high' and new_card > game.current_card) or (host_choice == 'low' and new_card < game.current_card)
-        opp_correct = (opp_choice == 'high' and new_card > game.current_card) or (opp_choice == 'low' and new_card < game.current_card)
-        result_desc = (f"ベット額: `{game.bet}pt`\n\n現在のカード: **{game.get_card_display()}**\n"
-                       f"次のカードは... **{game.get_card_display(new_card)}**！\n\n"
-                       f"【各プレイヤーの選択】\n"
-                       f"<@{host_id}>: `{host_choice.upper()}` → **{'正解！' if host_correct else 'ハズレ'}**\n"
-                       f"<@{opponent_id}>: `{opp_choice.upper()}` → **{'正解！' if opp_correct else 'ハズレ'}**")
-        winner_id, loser_id = None, None
-        if host_correct and not opp_correct: winner_id, loser_id = host_id, opponent_id
-        elif not host_correct and opp_correct: winner_id, loser_id = opponent_id, host_id
-        if winner_id:
-            winnings = game.bet * 2
-            update_player_points(winner_id, game.bet) 
-            result_embed = create_embed("ハイアンドロー 結果", f"{result_desc}\n\n🏆 <@{winner_id}> が `{winnings}pt` を獲得！", discord.Color.gold(), "success")
-        elif host_correct and opp_correct:
-            update_player_points(host_id, game.bet); update_player_points(opponent_id, game.bet)
-            result_embed = create_embed("ハイアンドロー 結果", f"{result_desc}\n\n🤝 引き分け！ベットしたポイントは返却されます。", discord.Color.light_grey(), "info")
+    async def on_timeout(self):
+        if self.message and self.selected_size is None:
+            try: await self.message.edit(embed=create_embed("タイムアウト", "オセロの盤面選択がタイムアウトしました。", color=discord.Color.orange(), status="warning"), view=None)
+            except: pass
+    async def on_error(self, i: discord.Interaction, e: Exception, item: discord.ui.Item): await send_error_embed(i, e)
+
+class OthelloRecruitmentView(discord.ui.View):
+    def __init__(self, host: discord.Member, opponent: discord.Member | None, board_size: int):
+        super().__init__(timeout=300.0)
+        self.host, self.opponent, self.board_size, self.message = host, opponent, board_size, None
+        if self.opponent is not None: self.bot_match_button.disabled = True
+    async def start_game(self, interaction: discord.Interaction, final_opponent: discord.Member):
+        for item in self.children: item.disabled = True
+        await interaction.message.edit(view=self)
+        players = [self.host.id, final_opponent.id]; random.shuffle(players)
+        game = OthelloGame(self.board_size)
+        game.players = {BLACK: players[0], WHITE: players[1]}
+        game.channel_id = interaction.channel.id
+        session = {"game": game, "players": game.players, "host_id": self.host.id}
+        await interaction.message.edit(content=None, embed=create_othello_board_embed(session), view=None)
+        game.message_id = interaction.message.id
+        active_games[interaction.message.id] = session
+        game.calculate_valid_moves(game.current_player)
+        if game.get_current_player_id() == bot.user.id: asyncio.create_task(make_bot_move(interaction.message, session))
         else:
-            result_embed = create_embed("ハイアンドロー 結果", f"{result_desc}\n\n💥 両者ハズレ！ベットしたポイントは没収されます。", discord.Color.red(), "danger")
-        await message.edit(embed=result_embed, view=None)
-        if message.id in active_highlow_games: del active_highlow_games[message.id]
-    @discord.ui.button(label="ハイ (High)", style=discord.ButtonStyle.success, emoji="🔼")
-    async def high_button(self, i, b): await self.handle_choice(i, "high")
-    @discord.ui.button(label="ロー (Low)", style=discord.ButtonStyle.danger, emoji="🔽")
-    async def low_button(self, i, b): await self.handle_choice(i, "low")
+            await update_reactions_for_next_turn(interaction.message, set(game.valid_moves_with_markers.values()))
+            if not bot.user.id in game.players.values(): game.afk_task = asyncio.create_task(othello_afk_timeout(game))
+        self.stop()
+    @discord.ui.button(label="承認する", style=discord.ButtonStyle.success, emoji="✅")
+    async def accept_button(self, i: discord.Interaction, b: discord.ui.Button):
+        if (self.opponent and i.user.id != self.opponent.id) or (not self.opponent and i.user.id == self.host.id):
+            await i.response.send_message("この操作は許可されていません。", ephemeral=True); return
+        await i.response.defer(); await self.start_game(i, i.user)
+    @discord.ui.button(label="キャンセル", style=discord.ButtonStyle.danger)
+    async def cancel_button(self, i: discord.Interaction, b: discord.ui.Button):
+        if i.user.id != self.host.id: await i.response.send_message("募集者のみがキャンセルできます。", ephemeral=True); return
+        await i.response.edit_message(embed=create_embed("キャンセル", f"{self.host.mention}が募集を取り消しました。", color=discord.Color.red(), status="danger"), view=None); self.stop()
+    @discord.ui.button(label="Botと対戦", style=discord.ButtonStyle.secondary)
+    async def bot_match_button(self, i: discord.Interaction, b: discord.ui.Button):
+        if i.user.id != self.host.id: await i.response.send_message("募集者のみがBotと対戦を開始できます。", ephemeral=True); return
+        await i.response.defer(); await self.start_game(i, bot.user)
+    async def on_timeout(self):
+        if self.message and not all(i.disabled for i in self.children):
+            try: await self.message.edit(embed=create_embed("タイムアウト", "この募集は時間切れになりました。", color=discord.Color.orange(), status="warning"), view=None)
+            except: pass
+    async def on_error(self, i: discord.Interaction, e: Exception, item: discord.ui.Item): await send_error_embed(i, e)
 
 class HighLowRecruitmentView(discord.ui.View):
     def __init__(self, host, opponent, bet_amount):
@@ -864,8 +825,9 @@ class ConnectFourRecruitmentView(discord.ui.View):
         for i in range(COLS):
             if game.board[0][i] == CF_EMPTY:
                  try:
+                    latest_message = await message.channel.fetch_message(message.id)
                     found = False
-                    for r in message.reactions:
+                    for r in latest_message.reactions:
                         if str(r.emoji) == CONNECTFOUR_MARKERS[i]:
                             found = True
                             break
@@ -892,7 +854,6 @@ class ConnectFourRecruitmentView(discord.ui.View):
             try: await self.message.edit(embed=create_embed("タイムアウト", "この募集は時間切れになりました。", color=discord.Color.orange(), status="warning"), view=None)
             except: pass
 
-# --- API & Other Helpers ---
 async def load_weather_city_codes():
     global weather_city_id_map
     if os.path.exists(WEATHER_CITY_CODES_FILE_PATH):
@@ -1051,12 +1012,10 @@ async def process_audio_with_rvc(ctx: commands.Context, status_message: discord.
                 try: os.remove(p)
                 except Exception as e_rem: print(f"Failed to delete temp file {p}: {e_rem}")
 
-# ========================== BACKGROUND TASKS ==========================
 @tasks.loop(minutes=5)
 async def cleanup_finished_games_task():
     current_time_jst = datetime.datetime.now(JST)
     
-    # Othello cleanup
     othello_games_to_remove_ids = []
     for msg_id, game_session_data in list(active_games.items()):
         game_obj = game_session_data.get("game")
@@ -1069,7 +1028,6 @@ async def cleanup_finished_games_task():
     if othello_games_to_remove_ids:
         print(f"Cleaned up {len(othello_games_to_remove_ids)} old finished othello games.")
 
-    # Janken cleanup
     janken_games_to_remove_ids = []
     for msg_id, j_game_data in list(active_janken_games.items()):
         try:
@@ -1090,6 +1048,48 @@ async def cleanup_finished_games_task():
                 print(f"Error cleaning up Janken message {msg_id}: {e_clean_msg}")
             del active_janken_games[msg_id]
             print(f"Cleaned up stale Janken game (ID: {msg_id}).")
+
+@tasks.loop(hours=24)
+async def wealth_tax_task():
+    now = datetime.datetime.now(JST)
+    if now.hour != 5:
+        return
+
+    print("Applying wealth tax...")
+    taxed_users = 0
+    
+    points_to_process = game_points.copy()
+    points_to_update = {}
+
+    for user_id_str, points in points_to_process.items():
+        try:
+            if int(user_id_str) == bot.user.id: continue
+        except ValueError:
+            continue
+
+        tax = 0
+        if points >= 3000:
+            tax = -50
+        elif points >= 500:
+            tax = -10
+        elif points >= 100:
+            tax = -5
+        
+        if tax != 0:
+            new_points = max(0, points + tax)
+            points_to_update[user_id_str] = new_points
+            taxed_users += 1
+    
+    if points_to_update:
+        print(f"Applying tax to {len(points_to_update)} users...")
+        for user_id, new_points in points_to_update.items():
+            game_points[user_id] = new_points
+        save_game_points()
+        print(f"Wealth tax applied to {taxed_users} users.")
+
+@wealth_tax_task.before_loop
+async def before_wealth_tax_task():
+    await bot.wait_until_ready()
 
 # ========================== DISCORD EVENTS ==========================
 @bot.event
@@ -1112,8 +1112,12 @@ async def on_ready():
     
     if not cleanup_finished_games_task.is_running():
         cleanup_finished_games_task.start()
+
+    if not wealth_tax_task.is_running():
+        wealth_tax_task.start()
         
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="杉山啓太Bot by(*'▽')"))
+    
     print("Bot is ready and watching.")
 
 @bot.event
@@ -1194,7 +1198,6 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
     if user == bot.user or user.bot:
         return
 
-    # --- じゃんけんの処理 ---
     if reaction.message.id in active_janken_games:
         game_data = active_janken_games.get(reaction.message.id)
         if game_data and user.id != game_data["host_id"] and game_data.get("game_status") == "opponent_recruiting":
@@ -1232,7 +1235,6 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
                 if reaction.message.id in active_janken_games: del active_janken_games[reaction.message.id]
         return
 
-    # --- コネクトフォーの処理 ---
     if reaction.message.id in active_connectfour_games:
         game = active_connectfour_games.get(reaction.message.id)
         if not game: return
@@ -1285,7 +1287,6 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
         
         return
 
-    # --- オセロの処理 ---
     if reaction.message.id in active_games:
         game_session = active_games[reaction.message.id]
         game = game_session["game"]
@@ -1335,39 +1336,109 @@ async def othello_command(ctx: commands.Context, opponent: discord.Member = None
     await ctx.send(embed=create_embed("オセロ 盤面選択", desc, discord.Color.green(), "info"), view=view)
 
 
-@bot.command(name="othello point", aliases=["point", "ポイント"])
-async def game_points_command(ctx: commands.Context):
-    human_players_points = {pid: p for pid, p in game_points.items() if bot.user and int(pid) != bot.user.id}
-    points = get_player_points(ctx.author.id)
-    sorted_points = sorted(human_players_points.items(), key=lambda item: item[1], reverse=True)
-    
-    embed = create_embed("ゲームポイントランキング", color=discord.Color.gold(), status="success")
-    rank_text = []
-    user_rank_info = f"\nあなたの順位: {ctx.author.mention} - {points}pt (ランキング外または未プレイ)"
-    user_found = False
+class PointRankingDetailView(discord.ui.View):
+    def __init__(self, author_id, rich_ranking_text, poor_ranking_text):
+        super().__init__(timeout=180.0)
+        self.author_id = author_id
+        self.rich_ranking_text = rich_ranking_text
+        self.poor_ranking_text = poor_ranking_text
+        self.message = None
 
-    for i, (pid, pval) in enumerate(sorted_points[:10]):
-        rank, medal = i + 1, ""
-        if rank == 1: medal = "🥇 "
-        elif rank == 2: medal = "🥈 "
-        elif rank == 3: medal = "🥉 "
+    @discord.ui.button(label="さらに表示", style=discord.ButtonStyle.primary)
+    async def show_details(self, interaction: discord.Interaction, button: discord.ui.Button):
+
+        embed = create_embed("ゲームポイント 詳細ランキング", color=discord.Color.gold(), status="info")
+        embed.add_field(name="🏆 富豪ランキング Top 10", value=self.rich_ranking_text or "該当者なし", inline=False)
+        embed.add_field(name="💸 貧乏ランキング Top 10", value=self.poor_ranking_text or "該当者なし", inline=False)
+        
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    async def on_timeout(self):
+        if self.message:
+            for item in self.children: item.disabled = True
+            try: await self.message.edit(view=self)
+            except discord.HTTPException: pass
+
+@bot.command(name="point", aliases=["othello point", "ポイント"])
+async def game_points_command(ctx: commands.Context):
+    author_id_str = str(ctx.author.id)
+    human_players_points = {pid: p for pid, p in game_points.items() if bot.user and int(pid) != bot.user.id}
+    if not human_players_points:
+        return await ctx.reply(embed=create_embed("ランキング", "まだポイントを持っているプレイヤーがいません。", status="info"), mention_author=False)
+        
+    rich_sorted = sorted(human_players_points.items(), key=lambda item: item[1], reverse=True)
+    poor_sorted = sorted(human_players_points.items(), key=lambda item: item[1])
+
+    embed = create_embed("ゲームポイントランキング", color=discord.Color.gold(), status="success")
+
+    rich_top5_text = []
+    for i, (pid, pval) in enumerate(rich_sorted[:5]):
+        medal = ""
+        if i == 0: medal = "🥇 "
+        elif i == 1: medal = "🥈 "
+        elif i == 2: medal = "🥉 "
         try: user = await bot.fetch_user(int(pid))
         except discord.NotFound: user = None
         user_display = user.mention if user else f"ID:{pid}"
-        rank_text.append(f"{medal}{rank}位 {user_display} - {pval}pt")
-        if user and user.id == ctx.author.id:
-            user_rank_info = f"\nあなたの順位: **{medal}{rank}位** {user.mention} - **{pval}pt**"
-            user_found = True
-            
-    if not rank_text: rank_text.append("まだポイントを持っているプレイヤーがいません。")
-    if not user_found and points > 0:
-        for i, (pid, pval) in enumerate(sorted_points):
-            if int(pid) == ctx.author.id:
-                user_rank_info = f"\nあなたの順位: **{i+1}位** {ctx.author.mention} - **{points}pt**"; break
-                
-    embed.description = "\n".join(rank_text) + user_rank_info
-    embed.set_footer(text="このポイントはオセロ・じゃんけん・賭けで共通です。")
-    await ctx.send(embed=embed)
+        rich_top5_text.append(f"{medal}{i + 1}位 {user_display} - **{pval}pt**")
+    embed.add_field(name="🏆 富豪ランキング Top 5", value="\n".join(rich_top5_text) or "該当者なし", inline=False)
+
+    poor_top3_text = []
+    poor_players = [p for p in poor_sorted if p[1] < 0]
+    for i, (pid, pval) in enumerate(poor_players[:3]):
+        try: user = await bot.fetch_user(int(pid))
+        except discord.NotFound: user = None
+        user_display = user.mention if user else f"ID:{pid}"
+        poor_top3_text.append(f"{i + 1}位 {user_display} - **{pval}pt**")
+    if poor_top3_text:
+        embed.add_field(name="💸 貧乏ランキング Top 3", value="\n".join(poor_top3_text), inline=False)
+        
+    my_points = get_player_points(ctx.author.id)
+    footer_text = f"あなたのポイント: {my_points}pt"
+    
+    my_rich_rank = -1
+    for i, (pid, pval) in enumerate(rich_sorted):
+        if pid == author_id_str:
+            my_rich_rank = i + 1
+            break
+    
+    if my_rich_rank != -1:
+        footer_text += f" | 富豪ランク: {my_rich_rank}位"
+    
+    if my_points < 0:
+        my_poor_rank = -1
+        for i, (pid, pval) in enumerate(poor_players):
+            if pid == author_id_str:
+                my_poor_rank = i + 1
+                break
+        if my_poor_rank != -1:
+            footer_text += f" | 貧乏ランク: {my_poor_rank}位"
+
+    embed.set_footer(text=footer_text, icon_url=ctx.author.display_avatar.url)
+        
+    rich_top10_text = []
+    for i, (pid, pval) in enumerate(rich_sorted[:10]):
+        medal = ""
+        if i == 0: medal = "🥇 "
+        elif i == 1: medal = "🥈 "
+        elif i == 2: medal = "🥉 "
+        try: user = await bot.fetch_user(int(pid))
+        except discord.NotFound: user = None
+        user_display = user.mention if user else f"ID:{pid}"
+        rich_top10_text.append(f"{medal}{i + 1}位 {user_display} - **{pval}pt**")
+
+    poor_top10_text = []
+    for i, (pid, pval) in enumerate(poor_sorted[:10]):
+        if pval >= 0: continue
+        try: user = await bot.fetch_user(int(pid))
+        except discord.NotFound: user = None
+        user_display = user.mention if user else f"ID:{pid}"
+        poor_top10_text.append(f"{i + 1}位 {user_display} - **{pval}pt**")
+
+    view = PointRankingDetailView(ctx.author.id, "\n".join(rich_top10_text), "\n".join(poor_top10_text))
+    
+    message = await ctx.reply(embed=embed, view=view, mention_author=False)
+    view.message = message
 
 @bot.command(name="leave", aliases=["退出","たいしゅつ"])
 async def leave_game_command(ctx: commands.Context):
@@ -1545,17 +1616,20 @@ class LoginBonusView(discord.ui.View):
 async def login_bonus_command(ctx: commands.Context):
     user_id_str = str(ctx.author.id)
     today = datetime.datetime.now(JST)
-    user_data = login_bonus_data.get(user_id_str, {"last_login": "2000-01-01", "consecutive_days": 0})
+    user_data = login_bonus_data.get(user_id_str, {})
     
-    if user_data["last_login"] == today.strftime("%Y-%m-%d"):
+    last_login_str = user_data.get("last_login", "2000-01-01")
+
+    if last_login_str == today.strftime("%Y-%m-%d"):
         desc = f"{STATUS_EMOJIS['warning']} 今日のログインボーナスは既に受け取っています。\n毎日0時にリセットされます。"
         view = LoginBonusView(ctx.author.id)
         message = await ctx.send(embed=create_embed("ログイン済み", desc, discord.Color.orange(), "warning"), view=view)
         view.message = message
         return
 
-    last_login_date = datetime.datetime.strptime(user_data["last_login"], "%Y-%m-%d").date()
-    consecutive_days = (user_data["consecutive_days"] % 10) + 1 if last_login_date == today.date() - datetime.timedelta(days=1) else 1
+    consecutive_days_val = user_data.get("consecutive_days", 0)
+    last_login_date = datetime.datetime.strptime(last_login_str, "%Y-%m-%d").date()
+    consecutive_days = (consecutive_days_val % 10) + 1 if last_login_date == today.date() - datetime.timedelta(days=1) else 1
     
     current_rank = get_player_rank(ctx.author.id)
     points_to_add = calculate_login_bonus(current_rank, consecutive_days)
@@ -1650,7 +1724,6 @@ async def help_command(ctx: commands.Context):
     message = await ctx.send(embed=embed, view=view)
     view.message = message
 
-# imakita
 @help_command.error
 async def help_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown): 
@@ -1860,7 +1933,6 @@ async def gaming_command(ctx: commands.Context):
             else: await ctx.send(embed=create_embed("エラー", "画像の最終処理に失敗しました。", discord.Color.red(), "danger"))
         else: await ctx.send(embed=create_embed("エラー", "ゲーミングGIFの生成に失敗しました。", discord.Color.red(), "danger"))
 
-# # VOICE COMMAND
 @bot.command(name="voice", aliases=["ボイス", "ぼいす", "ボイチェン"])
 @commands.cooldown(1, 20, commands.BucketType.user)
 async def rvc_voice_convert_command(ctx: commands.Context, *, text_input: str = None):
@@ -1901,7 +1973,6 @@ async def rvc_voice_convert_command(ctx: commands.Context, *, text_input: str = 
     
     if audio_bytes_io: audio_bytes_io.close()
 
-# # PING COMMAND
 @bot.command(name="ping", aliases=["ピング","接続速度","ぴんぐ"])
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def ping_command(ctx: commands.Context):
@@ -2128,6 +2199,200 @@ async def time_command(ctx: commands.Context, country_code: str = None):
         await ctx.send(embed=create_embed(f"{target_tz_name.split('/')[-1].replace('_', ' ')} の現在時刻", desc, discord.Color.blue(), "success"))
     except Exception as e: await send_error_embed(ctx, e)
 
+class ConfirmGambleView(discord.ui.View):
+    def __init__(self, author_id):
+        super().__init__(timeout=60.0)
+        self.author_id = author_id
+        self.confirmed = False
+        self.message = None
+
+    @discord.ui.button(label="実行", style=discord.ButtonStyle.success)
+    async def confirm_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.author_id:
+            return await interaction.response.send_message("コマンドを実行した本人のみが操作できます。", ephemeral=True)
+        
+        self.confirmed = True
+        for item in self.children:
+            item.disabled = True
+        await interaction.response.edit_message(view=self)
+        self.stop()
+
+    @discord.ui.button(label="キャンセル", style=discord.ButtonStyle.danger)
+    async def cancel_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.author_id:
+            return await interaction.response.send_message("コマンドを実行した本人のみが操作できます。", ephemeral=True)
+        
+        self.confirmed = False
+        embed = create_embed("キャンセル", "ギャンブルをキャンセルしました。", discord.Color.red(), "danger")
+        await interaction.response.edit_message(embed=embed, view=None)
+        self.stop()
+    
+    async def on_timeout(self):
+        if self.message and not self.confirmed:
+             embed = create_embed("タイムアウト", "操作がなかったため、ギャンブルはキャンセルされました。", discord.Color.orange(), "warning")
+             try:
+                 await self.message.edit(embed=embed, view=None)
+             except discord.HTTPException:
+                 pass
+
+class GambleResultView(discord.ui.View):
+    def __init__(self, details_embed: discord.Embed):
+        super().__init__(timeout=180.0)
+        self.details_embed = details_embed
+        self.message = None
+
+    @discord.ui.button(label="仕組み", style=discord.ButtonStyle.secondary, emoji="⚙️")
+    async def details_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message(embed=self.details_embed, ephemeral=True)
+
+    async def on_timeout(self):
+        if self.message:
+            for item in self.children:
+                item.disabled = True
+            try:
+                await self.message.edit(view=self)
+            except discord.HTTPException:
+                pass
+
+@bot.command(name="gamble", aliases=["ギャンブル"])
+@commands.cooldown(1, 5, commands.BucketType.user)
+async def gamble_command(ctx: commands.Context):
+    player_id = ctx.author.id
+    user_id_str = str(player_id)
+    today_str = datetime.datetime.now(JST).strftime("%Y-%m-%d")
+    current_points = get_player_points(player_id)
+
+    GAMBLE_LIMIT = 5
+    play_count_today = 0
+    if current_points > 0:
+        user_gamble_data = login_bonus_data.get(user_id_str, {}).get("gamble_info", {"date": "2000-01-01", "count": 0})
+        play_count_today = user_gamble_data["count"] if user_gamble_data["date"] == today_str else 0
+        
+        if play_count_today >= GAMBLE_LIMIT:
+            msg = (f"今日のギャンブルは上限の **{GAMBLE_LIMIT}回** に達しました。\n"
+                   f"安定してポイントを稼ぎたい場合は `bet` コマンドの使用を推奨します。")
+            return await ctx.reply(embed=create_embed("回数上限", msg, discord.Color.red(), "danger"), mention_author=False)
+
+    remaining_attempts = max(0, GAMBLE_LIMIT - play_count_today) if current_points > 0 else "無制限"
+
+    confirm_desc = (
+        "ベット額はあなたの手持ちからランダムで決まります（3分の1以上）。\n"
+        "これは富豪であるほどポイントの変化が激しいことを表します。\n"
+        "**安定してポイントを稼ぎたい場合は `bet` コマンドの使用を推奨します。**\n\n"
+        f"一日 **{GAMBLE_LIMIT}回** まで利用することができます。\n"
+        f"本日残り回数: **{remaining_attempts}**"
+    )
+    if current_points <= 0:
+        confirm_desc += "\n\n**※救済措置発動中！回数制限なくギャンブルが可能です。**"
+
+    confirm_view = ConfirmGambleView(player_id)
+    confirm_message = await ctx.reply(embed=create_embed("ギャンブルを実行しますか？", confirm_desc, discord.Color.yellow(), "warning"), view=confirm_view, mention_author=False)
+    confirm_view.message = confirm_message
+
+    await confirm_view.wait()
+    if not confirm_view.confirmed:
+        return
+    
+    user_gamble_data = login_bonus_data.get(user_id_str, {}).get("gamble_info", {"date": "2000-01-01", "count": 0})
+    if user_gamble_data["date"] != today_str:
+        user_gamble_data = {"date": today_str, "count": 1}
+    else:
+        user_gamble_data["count"] += 1
+    if user_id_str not in login_bonus_data: login_bonus_data[user_id_str] = {}
+    login_bonus_data[user_id_str]["gamble_info"] = user_gamble_data
+    save_login_bonus_data()
+    
+    is_whale = current_points >= 20000
+    bet_amount = 0
+    if is_whale:
+        bet_amount = random.randint(current_points // 4, current_points // 2)
+    elif current_points > 0:
+        bet_amount = random.randint(max(1, current_points // 3), current_points)
+    else:
+        if -100 <= current_points <= 0: bet_amount = 100
+        else:
+            virtual_points = abs(current_points) // 2
+            bet_amount = random.randint(virtual_points // 3, virtual_points)
+
+    if is_whale:
+        multiplier = round(random.uniform(-1.8, -1.5), 2)
+    else: 
+        def get_multiplier():
+            roll = random.random()
+            if roll < 0.02:
+                base = random.uniform(5.01, 10.0)
+            elif roll < 0.15:
+                base = random.uniform(3.01, 5.0)
+            else: # 85% 通常
+                base = random.uniform(1.51, 3.0)
+            return round(base * random.choice([-1, 1]), 2)
+        
+        multiplier = get_multiplier()
+        if -1.5 <= multiplier <= 1.5 and multiplier != 0:
+             multiplier = get_multiplier()
+
+    original_multiplier = multiplier
+
+    profit_loss = int(bet_amount * multiplier)
+    points_change = profit_loss - bet_amount
+    final_points = current_points + points_change
+    
+    if current_points <= 0 and final_points > 0:
+        target_points = random.randint(0, 1000)
+        points_change = target_points - current_points
+        if bet_amount > 0:
+            multiplier = round((points_change + bet_amount) / bet_amount, 2)
+
+    game_points[user_id_str] = current_points + points_change
+    save_game_points()
+    
+    details_log = [
+        "**1. ベット額の決定**",
+        f"▫️ ギャンブル前の所持ポイント: `{current_points}pt`",
+    ]
+    if is_whale: details_log.append("▫️ **富豪調整が適用されました。**")
+    details_log.append(f"▶️ **ベット額: `{bet_amount}pt`**")
+    details_log.append("\n**2. 倍率の抽選**")
+    if is_whale:
+        details_log.append("▫️ 富豪調整により、特別な倍率が設定されました。")
+        details_log.append(f"▶️ **抽選された倍率: `{original_multiplier:+.2f}` 倍**")
+    else:
+        details_log.append(f"▫️ 1回目の抽選結果: `{original_multiplier:+.2f}` 倍")
+        if original_multiplier != multiplier:
+             details_log.append("▫️ ±1.5倍の範囲だったため再抽選！")
+             details_log.append(f"▶️ **最終的な倍率: `{multiplier:+.2f}` 倍**")
+    if current_points <= 0 and final_points > 0 and original_multiplier != multiplier:
+        details_log.append("▫️ **奇跡の瞬間！借金からの帰還！**")
+        details_log.append(f"▶️ **表示上の倍率: `{multiplier:+.2f}` 倍**")
+    details_log.extend([
+        "\n**3. 最終的なポイント変動**",
+        f"▫️ `({bet_amount}pt × {multiplier:+.2f}倍) - {bet_amount}pt`",
+        f"▶️ **ポイント変動: `{points_change:+}pt`**"
+    ])
+
+    result_text, color = "", discord.Color.default()
+    if is_whale: result_text, color = "💸 **何か大きな力が働いたようだ...** 💸", discord.Color.dark_purple()
+    elif multiplier > 5.0: result_text, color = "🎉🎉🎉 **超大当たり！！** 🎉🎉🎉", discord.Color.gold()
+    elif multiplier > 3.0: result_text, color = "🎊 **大当たり！** 🎊", discord.Color.green()
+    elif multiplier < -5.0: result_text, color = "💀💀💀 **世紀の大失敗！！** 💀💀💀", discord.Color.from_rgb(100, 0, 0)
+    elif multiplier < -3.0: result_text, color = "💸 **大失敗...** 💸", discord.Color.red()
+    else: result_text, color = ("ちょい勝ち！", discord.Color.light_grey()) if multiplier > 0 else ("ちょい負け...", discord.Color.dark_grey())
+
+    desc = (f"{ctx.author.mention} が **`{bet_amount}pt`** をベット！\n\n"
+            f"結果は... **`{multiplier:+.2f}`** 倍！\n\n"
+            f"**{result_text}**")
+    
+    details_embed = create_embed("ギャンブルの仕組み", "\n".join(details_log), discord.Color.blurple(), "info")
+    view = GambleResultView(details_embed)
+
+    result_embed = create_embed("ハイリスクギャンブル", desc, color, "info")
+    result_embed.add_field(name="ポイント変動", value=f"`{points_change:+}pt`", inline=True)
+    result_embed.add_field(name="現在のポイント", value=f"`{get_player_points(player_id)}pt`", inline=True)
+
+    await confirm_message.edit(embed=result_embed, view=view)
+    view.message = confirm_message
+
+
 @bot.command(name="bet", aliases=["賭け", "かけ", "ベッド", "べっど"])
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def bet_command(ctx: commands.Context, amount_str: str):
@@ -2170,7 +2435,6 @@ async def bet_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument): await ctx.send(embed=create_embed("引数不足", "賭け金を指定してください。\n例: `bet 10`", discord.Color.orange(), "warning"))
     else: await help_command_error(ctx, error)
 
-# ================================== JANKEN COMMAND (with Buttons) ==================================
 class JankenChoiceView(discord.ui.View):
     def __init__(self, host_id: int):
         super().__init__(timeout=60.0)
@@ -2405,6 +2669,92 @@ async def text_common_error_handler(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument): await ctx.send(embed=create_embed("引数不足", "画像にするテキストを指定してください。", discord.Color.orange(), "warning"))
     else: await help_command_error(ctx, error) 
 text_command.error = text2_command.error = text3_command.error = text_common_error_handler
+
+class ConfirmGiveView(discord.ui.View):
+    def __init__(self, author, target, amount, fee):
+        super().__init__(timeout=60.0)
+        self.author = author
+        self.target = target
+        self.amount = amount
+        self.fee = fee
+        self.is_done = False
+        self.message = None
+
+    @discord.ui.button(label="はい、送金します", style=discord.ButtonStyle.success)
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.author.id:
+            return await interaction.response.send_message("コマンドを実行した本人のみが操作できます。", ephemeral=True)
+        
+        total_cost = self.amount + self.fee
+        if get_player_points(self.author.id) < total_cost:
+            embed = create_embed("送金失敗", "ポイントが不足しています。", discord.Color.red(), "danger")
+            await interaction.response.edit_message(embed=embed, view=None)
+            self.is_done = True; self.stop()
+            return
+
+        update_player_points(self.author.id, -total_cost)
+        update_player_points(self.target.id, self.amount)
+        
+        desc = (f"<@{self.author.id}> から <@{self.target.id}> に **`{self.amount}pt`** が送金されました。\n"
+                f"手数料として `{self.fee}pt` が引かれました。")
+        embed = create_embed("送金完了", desc, discord.Color.green(), "success")
+        await interaction.response.edit_message(embed=embed, view=None)
+        self.is_done = True; self.stop()
+
+    @discord.ui.button(label="いいえ", style=discord.ButtonStyle.danger)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.author.id:
+            return await interaction.response.send_message("コマンドを実行した本人のみ操作できます。", ephemeral=True)
+        
+        embed = create_embed("キャンセル", "送金をキャンセルしました。", discord.Color.red(), "danger")
+        await interaction.response.edit_message(embed=embed, view=None)
+        self.is_done = True; self.stop()
+    
+    async def on_timeout(self):
+        if self.message and not self.is_done:
+            embed = create_embed("タイムアウト", "送金がタイムアウトしました。", discord.Color.orange(), "warning")
+            try:
+                await self.message.edit(embed=embed, view=None)
+            except discord.HTTPException:
+                pass
+
+@bot.command(name="give", aliases=["pay", "送金"])
+@commands.cooldown(1, 10, commands.BucketType.user)
+async def give_command(ctx: commands.Context, target: discord.Member, amount_str: str):
+    author = ctx.author
+    if author == target or target.bot:
+        return await ctx.send(embed=create_embed("エラー", "自分自身またはBotには送金できません。", discord.Color.orange(), "warning"))
+
+    try:
+        amount = int(amount_str)
+        if amount <= 0:
+            return await ctx.send(embed=create_embed("エラー", "1以上のポイントを送金してください。", discord.Color.orange(), "warning"))
+    except ValueError:
+        return await ctx.send(embed=create_embed("エラー", "金額は有効な整数で入力してください。", discord.Color.orange(), "warning"))
+
+    fee = math.ceil(amount * 0.15)
+    total_cost = amount + fee
+    author_points = get_player_points(author.id)
+
+    if author_points < total_cost:
+        return await ctx.send(embed=create_embed("ポイント不足", f"送金には手数料を含め `{total_cost}pt` 必要ですが、あなたは `{author_points}pt` しか持っていません。", discord.Color.orange(), "warning"))
+
+    desc = (f"本当に <@{target.id}> に **`{amount}pt`** を送金しますか？\n\n"
+            f"手数料として別途 **`{fee}pt`** (15%) がかかります。\n"
+            f"合計で **`{total_cost}pt`** があなたの所持ポイントから引かれます。")
+    
+    view = ConfirmGiveView(author, target, amount, fee)
+    confirmation_message = await ctx.send(embed=create_embed("送金確認", desc, discord.Color.yellow(), "warning"), view=view)
+    view.message = confirmation_message
+    
+    await view.wait()
+    if not view.is_done:
+        embed = create_embed("タイムアウト", "送金がタイムアウトしました。", discord.Color.orange(), "warning")
+        try:
+            await confirmation_message.edit(embed=embed, view=None)
+        except discord.HTTPException:
+            pass
+
 
 # ========================== BOT EXECUTION ==========================
 if __name__ == "__main__":
