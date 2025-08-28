@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+*.json
+audio/input/
+audio/output/
+RVC_Project/
+Thumbs.db
