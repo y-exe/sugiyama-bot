@@ -6,7 +6,7 @@
 杉山啓太がGM雑談ライフをサポートします。<br>
 AIに修正もらってたら自分でもわけわかめなコードになってました。
 
-<img src="https://count.yexe.xyz/@yexe.net" alt="yexe.net 総合カウンター"/><br>
+<img src="https://count.yexe.xyz/@yexe.net?theme=rule34" alt="yexe.net 総合カウンター"/><br>
 <sub>yexe.net 総合</sub>
 
 [![Discord.py](https://img.shields.io/badge/discord.py-v2.x-blue?style=for-the-badge&logo=discord&logoColor=white)](https://discordpy.readthedocs.io/en/latest/)
