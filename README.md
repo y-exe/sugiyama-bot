@@ -1,0 +1,140 @@
+<div align="center">
+
+# sugiyama-Bot
+
+多機能DiscordBot（笑）<br>
+大規模なリファクタリングを行い、保守性の高いモジュール構成へ移行しました。
+
+[![Discord.py](https://img.shields.io/badge/discord.py-v2.x-blue?style=for-the-badge&logo=discord&logoColor=white)](https://discordpy.readthedocs.io/en/latest/)
+[![Python](https://img.shields.io/badge/Python-3.10.x-yellow?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![License](https://img.shields.io/badge/LICENSE-MIT-green.svg?style=for-the-badge)](LICENSE)
+
+</div>
+
+## 概要
+
+杉山啓太Bot は、Discordサーバーでのコミュニケーションを活性化させるために開発された多機能Botです。<br>
+DeepSeekAPIによる会話要約、VoiceVoxを用いたテキスト読み上げ、画像生成・加工、そしてオセロや四目並べといったゲーム機能を提供します。
+
+コマンドの実行は、許可されたチャンネル内でコマンド名と引数を入力するだけで行えます (プレフィックス不要)。
+
+## コマンドリスト
+
+### ゲーム機能
+*   `othello (@相手ユーザー)`:
+    *   `othello`: オセロの対戦相手を募集します。盤面サイズ(6x6, 8x8, 10x10)を選択可能です。
+    *   `othello @メンション`: 指定したユーザーと対戦します。
+*   `connectfour (@相手ユーザー)` (または `cf`): 四目並べの対戦を開始します。
+*   `janken`: じゃんけんゲームを開始します。リアクションで手を決定し、ポイントを賭けて勝負します。
+*   `gamble`: 所持ポイントを賭けたハイリスク・ハイリターンなギャンブルを行います。
+*   `bet [金額]`: ポイントを賭けてシンプルなダイスゲームを行います。
+*   `login`: 1日1回、ログインボーナス（ポイント）を受け取ります。
+*   `give [相手] [金額]`: 他のユーザーにポイントを送金します（手数料あり）。
+
+*   `leave`: 進行中のゲームから投了・離脱します。
+*   `point`: 現在のゲームポイントとランキングを表示します。
+
+### 画像・メディア機能
+*   `text [文字列]`: 指定スタイル（黄色・黒縁）でテキスト画像を生成します。末尾に `square` をつけると正方形スタンプ化します。
+*   `text2 [文字列]`: 青色スタイルのテキスト画像を生成します。
+*   `text3 [文字列]`: 赤色・明朝体スタイルのテキスト画像を生成します。
+*   `text4 [文字列] square`: 特殊な変形を加えたテキスト画像を生成します（正方形のみ）。
+*   `text5 [文字列] square`: 虹色グラデーションのテキスト画像を生成します（正方形のみ）。
+*   `watermark`: 画像を添付して実行すると、ランダムなテンプレートを用いてウォーターマークを合成します。
+*   `gaming`: 画像を添付して実行すると、ゲーミング風（七色に光る）GIFアニメーションに変換します。
+*   `5000 [上文字列] [下文字列]`: 「5000兆円欲しい！」風のロゴ画像を生成します。
+*   `voice [テキスト]`: VoiceVox APIを使用して、テキストを音声ファイル(WAV)に変換して送信します。
+
+### ユーティリティ・その他
+*   `/imakita`: (スラッシュコマンド) 過去30分のチャットログをAI (DeepSeek) が3行で要約します。
+*   `tenki [都市名]`: 指定された日本の都市の天気予報を表示します。DeepSeekによる都市名の推測補完に対応しています。
+*   `rate [金額] [通貨コード]`: 指定した外貨を現在のレートで日本円に換算します。
+*   `time (国コード)`: 世界時計を表示します。コードなしの場合は日本時間を表示します。
+*   `info (@ユーザー)`: ユーザーの詳細情報（ID、作成日、バッジ、ロール等）を表示します。
+*   `totusi [文字列]`: 「突然の死」風のアスキーアートを生成します。
+*   `ping`: Botの応答速度を表示します。
+*   `setchannel` (管理者のみ): 現在のチャンネルでのBot利用を許可/禁止します。
+
+## 動作に必要なファイル構成
+
+本バージョンより、機能ごとにフォルダが分割された構成になっています。
+
+```text
+.
+├── main.py                 # 起動用スクリプト
+├── bot.py                  # Bot本体の定義
+├── .env                    # 環境変数 (APIキー等)
+├── requirements.txt        # 依存ライブラリ一覧
+├── assets/                 # アセットフォルダ
+│   ├── fonts/              # フォントファイル (必須)
+│   │   ├── MochiyPopOne-Regular.ttf
+│   │   └── NotoSerifJP-Black.ttf
+│   └── watermark_templates/ # ウォーターマーク用画像 (必須)
+├── core/                   # 設定・定数・状態管理
+├── cogs/                   # コマンド定義 (Economy, Games, Media, Utility, System)
+├── data/                   # データ保存用 (自動生成されるJSONファイル等)
+├── engines/                # ゲームロジック
+├── services/               # AI・画像処理・ネットワーク機能
+└── ui/                     # Discord UI (Embed, View)
+```
+
+## 導入手順
+
+### 1. 必須ソフトウェアのインストール
+*   **Python 3.10以降**: インストール時にPATHを通してください。
+*   **Git**: リポジトリのクローンに利用します。
+
+### 2. ファイルの準備
+リポジトリをクローンまたはダウンロードし、`assets/fonts/` フォルダ内に以下のフォントファイルを配置してください。
+*   `MochiyPopOne-Regular.ttf`
+*   `NotoSerifJP-Black.ttf`
+
+また、`assets/watermark_templates/` に合成用のテンプレート画像を配置してください。
+
+### 3. ライブラリのインストール
+コマンドプロンプトまたはターミナルでプロジェクトのフォルダを開き、以下のコマンドを実行します。
+
+```bash
+pip install -r requirements.txt
+```
+
+※ `requirements.txt` がない場合は以下を実行してください:
+```bash
+pip install discord.py python-dotenv pillow pydub aiohttp pytz numpy
+```
+
+### 4. 環境変数の設定
+ルートディレクトリに `.env` ファイルを作成し、以下の内容を記述してください。
+
+```env
+DISCORD_BOT_TOKEN=あなたのDiscordBotトークン
+DEEPSEEK_API_KEY=DeepSeekのAPIキー
+VOICEVOX_API_KEY=VoiceVox(WebAPI)のAPIキー
+WAIFU2X_CAFFE_PATH=C:/path/to/waifu2x-caffe-cui.exe  # (任意) 高画質化を使用する場合
+```
+
+### 5. Botの起動
+以下のコマンドでBotを起動します。
+
+```bash
+python main.py
+```
+
+## トラブルシューティング
+
+*   **ModuleNotFoundError**: 必要なライブラリがインストールされていません。`pip install` コマンドを確認してください。
+*   **フォントエラー**: `assets/fonts` フォルダに指定されたファイル名のフォントがあるか確認してください。
+*   **APIエラー**: `.env` ファイルのAPIキーが正しいか、有効期限が切れていないか確認してください。
+
+## クレジット・使用API
+
+*   **DeepSeek API:** チャット要約、地名推測に使用
+*   **VoiceVox (Web API):** テキスト読み上げに使用
+*   **つくもAPI:** 天気予報データの取得
+*   **Exchange Rate API:** 為替レートの取得
+*   **5000兆円欲しい！API:** ロゴ生成
+*   **Discord.py:** Botフレームワーク
+
+---
+
+© yexe.net
