@@ -35,7 +35,7 @@ class Media(commands.Cog):
         
         await ctx.send(embed=embed, file=file)
 
-    async def _process_text_command(self, ctx, args, title, color, params, font_name):
+    async def _process_text_command(self, ctx, args, title, color, normal_params, square_params, font_name):
         if not args:
             return await ctx.send(embed=create_embed("引数不足", "画像にするテキストを指定してください。", discord.Color.orange(), "warning"))
 
@@ -48,6 +48,9 @@ class Media(commands.Cog):
         font_path = os.path.join(FONTS_DIR, font_name)
         if not os.path.exists(font_path):
             return await ctx.send(embed=create_embed("内部エラー", f"フォントファイルが見つかりません: `{font_name}`", discord.Color.red(), "danger"))
+
+        # モードに応じたパラメータを選択
+        params = square_params if is_square else normal_params
 
         msg = await ctx.send(embed=create_embed("画像生成中...", "テキスト画像を生成しています...", discord.Color.blue(), "pending"))
         
@@ -71,15 +74,17 @@ class Media(commands.Cog):
 
     @commands.command(name="text")
     async def text1(self, ctx, *, args: str):
-        params = {
-            'text_color': (255, 255, 0), 
-            'inner_color': (0, 0, 0), 
-            'inner_thickness': 7,
-            'outer_color': (255, 255, 255), 
-            'outer_thickness': 5, 
-            'spacing': 0
+        # 通常設定
+        n_params = {
+            'text_color': (255, 255, 0), 'inner_color': (0, 0, 0), 'inner_thickness': 7,
+            'outer_color': (255, 255, 255), 'outer_thickness': 5, 'spacing': 0
         }
-        await self._process_text_command(ctx, args, "やまかわサムネ風テキスト", discord.Color.yellow(), params, "MochiyPopOne-Regular.ttf")
+        # Square設定（太字・文字詰め）
+        s_params = {
+            'text_color': (255, 255, 0), 'inner_color': (0, 0, 0), 'inner_thickness': 15,
+            'outer_color': (255, 255, 255), 'outer_thickness': 12, 'spacing': -17, 'padding': 15
+        }
+        await self._process_text_command(ctx, args, "やまかわサムネ風テキスト", discord.Color.yellow(), n_params, s_params, "MochiyPopOne-Regular.ttf")
 
     @text1.error
     async def text_error(self, ctx, error):
@@ -88,15 +93,15 @@ class Media(commands.Cog):
 
     @commands.command(name="text2")
     async def text2(self, ctx, *, args: str):
-        params = {
-            'text_color': (50, 150, 255), 
-            'inner_color': (0, 0, 0), 
-            'inner_thickness': 7,
-            'outer_color': (255, 255, 255), 
-            'outer_thickness': 5, 
-            'spacing': 0
+        n_params = {
+            'text_color': (50, 150, 255), 'inner_color': (0, 0, 0), 'inner_thickness': 7,
+            'outer_color': (255, 255, 255), 'outer_thickness': 5, 'spacing': 0
         }
-        await self._process_text_command(ctx, args, "やまかわ青文字テキスト", discord.Color.blue(), params, "MochiyPopOne-Regular.ttf")
+        s_params = {
+            'text_color': (50, 150, 255), 'inner_color': (0, 0, 0), 'inner_thickness': 15,
+            'outer_color': (255, 255, 255), 'outer_thickness': 12, 'spacing': -17, 'padding': 15
+        }
+        await self._process_text_command(ctx, args, "やまかわ青文字テキスト", discord.Color.blue(), n_params, s_params, "MochiyPopOne-Regular.ttf")
 
     @text2.error
     async def text2_error(self, ctx, error):
@@ -105,13 +110,15 @@ class Media(commands.Cog):
 
     @commands.command(name="text3")
     async def text3(self, ctx, *, args: str):
-        params = {
-            'text_color': (0xC3, 0x02, 0x03), 
-            'inner_color': (255, 255, 255), 
-            'inner_thickness': 7, 
+        n_params = {
+            'text_color': (0xC3, 0x02, 0x03), 'inner_color': (255, 255, 255), 'inner_thickness': 7,
             'spacing': 0
         }
-        await self._process_text_command(ctx, args, "やまかわ赤文字テキスト", discord.Color.from_rgb(0xC3, 0x02, 0x03), params, "NotoSerifJP-Black.ttf")
+        s_params = {
+            'text_color': (0xC3, 0x02, 0x03), 'inner_color': (255, 255, 255), 'inner_thickness': 15,
+            'spacing': -17, 'padding': 15
+        }
+        await self._process_text_command(ctx, args, "やまかわ赤文字テキスト", discord.Color.from_rgb(0xC3, 0x02, 0x03), n_params, s_params, "NotoSerifJP-Black.ttf")
 
     @text3.error
     async def text3_error(self, ctx, error):
@@ -210,7 +217,6 @@ class Media(commands.Cog):
             await ctx.send(embed=create_embed("クールダウン中", f"あと {error.retry_after:.1f}秒 お待ちください。", discord.Color.orange(), "pending"))
 
     @commands.command(name="5000", aliases=["5000兆円"])
-    @commands.cooldown(1, 5, commands.BucketType.user)
     async def choyen(self, ctx, top: str, bottom: str, *options):
         hoshii = "hoshii" in options
         rainbow = "rainbow" in options
